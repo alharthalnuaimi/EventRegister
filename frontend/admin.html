@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم والإحصائيات — جامعة الفارابي</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .admin-body {
+            background: #0B132B;
+            color: #F8FAFC;
+            min-height: 100vh;
+            padding: 30px 20px;
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+        }
+
+        .admin-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .admin-title-area h1 {
+            font-size: 1.8rem;
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .admin-title-area p {
+            color: #94A3B8;
+            font-size: 0.95rem;
+            margin-top: 4px;
+        }
+
+        .admin-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #D4AF37 0%, #B89728 100%);
+            color: #0B132B;
+        }
+        .btn-primary:hover {
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.08);
+            color: #FFFFFF;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--gold);
+        }
+
+        .stat-card--crimson::after { background: var(--crimson); }
+        .stat-card--blue::after { background: #38BDF8; }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #94A3B8;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #FFFFFF;
+        }
+
+        /* Filter & Search Bar */
+        .controls-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .search-box {
+            position: relative;
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 16px 10px 40px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            color: #FFFFFF;
+            font-family: inherit;
+            font-size: 0.95rem;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--gold);
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #94A3B8;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .tab-btn.active {
+            background: rgba(212, 175, 55, 0.15);
+            color: var(--gold);
+            border-color: var(--gold);
+            font-weight: 600;
+        }
+
+        /* Attendees Table */
+        .table-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: right;
+            font-size: 0.9rem;
+        }
+
+        .data-table th {
+            background: rgba(255, 255, 255, 0.04);
+            color: #94A3B8;
+            padding: 14px 18px;
+            font-weight: 600;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            white-space: nowrap;
+        }
+
+        .data-table td {
+            padding: 14px 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: #E2E8F0;
+            white-space: nowrap;
+        }
+
+        .data-table tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .role-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+
+        .role-badge--volunteer {
+            background: rgba(212, 175, 55, 0.15);
+            color: #FCD34D;
+            border: 1px solid rgba(212, 175, 55, 0.4);
+        }
+
+        .role-badge--attendee {
+            background: rgba(255, 255, 255, 0.08);
+            color: #CBD5E1;
+        }
+
+        .serial-tag {
+            font-family: monospace;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: #38BDF8;
+            font-size: 0.85rem;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.2s ease;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            background: #1C2541;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 14px;
+            max-width: 550px;
+            width: 100%;
+            padding: 30px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            color: #FFFFFF;
+            margin-bottom: 12px;
+        }
+
+        .modal-desc {
+            color: #94A3B8;
+            font-size: 0.88rem;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .modal-textarea {
+            width: 100%;
+            height: 160px;
+            background: #0B132B;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            color: #FFFFFF;
+            padding: 12px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            resize: vertical;
+            margin-bottom: 20px;
+            direction: ltr;
+            text-align: left;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+    </style>
+</head>
+<body class="admin-body">
+
+    <div class="admin-container">
+
+        <!-- Top Header -->
+        <header class="admin-header">
+            <div class="admin-title-area">
+                <h1>
+                    <span>🏛️</span>
+                    <span>لوحة تحكم الحضور — جامعة الفارابي</span>
+                </h1>
+                <p id="event-name-sub">محاضرة علمية: AI Is Not As We Know It (أ.د. ضياء الجميلي)</p>
+            </div>
+            <div class="admin-actions">
+                <button class="btn-action btn-secondary" id="btn-import-modal">
+                    <span>📥 استيراد المتطوعين</span>
+                </button>
+                <button class="btn-action btn-primary" id="btn-export-excel">
+                    <span>📊 تصدير البيانات (Excel/CSV)</span>
+                </button>
+                <button class="btn-action btn-secondary" id="btn-refresh">
+                    <span>🔄 تحديث</span>
+                </button>
+                <a href="display.html" target="_blank" class="btn-action btn-secondary">
+                    <span>🖥️ شاشة القاعة</span>
+                </a>
+            </div>
+        </header>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">إجمالي المسجلين الحاضرين</div>
+                <div class="stat-value" id="stat-total">0</div>
+            </div>
+            <div class="stat-card stat-card--crimson">
+                <div class="stat-label">المتطوعون والمميزون ⭐</div>
+                <div class="stat-value" id="stat-volunteers">0</div>
+            </div>
+            <div class="stat-card stat-card--blue">
+                <div class="stat-label">الضيوف والطلبة</div>
+                <div class="stat-value" id="stat-attendees">0</div>
+            </div>
+        </div>
+
+        <!-- Controls Card -->
+        <div class="controls-card">
+            <div class="search-box">
+                <input type="text" id="search-input" class="search-input" placeholder="بحث بالاسم، رقم الهاتف، أو جهة العمل...">
+            </div>
+            <div class="filter-tabs">
+                <button class="tab-btn active" data-filter="all">الكل (<span id="count-tab-all">0</span>)</button>
+                <button class="tab-btn" data-filter="volunteer">المتطوعون ⭐ (<span id="count-tab-vol">0</span>)</button>
+                <button class="tab-btn" data-filter="attendee">الضيوف (<span id="count-tab-att">0</span>)</button>
+            </div>
+        </div>
+
+        <!-- Attendees Table -->
+        <div class="table-card">
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>رقم القيد</th>
+                            <th>الاسم الكامل</th>
+                            <th>النوع</th>
+                            <th>المسمى / الدور</th>
+                            <th>جهة العمل / الكلية</th>
+                            <th>رقم الهاتف</th>
+                            <th>البريد الإلكتروني</th>
+                            <th>وقت التسجيل</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                        <tr>
+                            <td colspan="9" style="text-align: center; padding: 40px; color: #94A3B8;">جارٍ تحميل سجلات الحضور...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Import Volunteers Modal -->
+    <div class="modal-overlay" id="import-modal">
+        <div class="modal-card">
+            <h3 class="modal-title">استيراد قائمة المتطوعين</h3>
+            <p class="modal-desc">
+                أدخل بيانات المتطوعين لتمييزهم تلقائياً بشارة ذهبية في الحضور.
+                صيغة كل سطر: <code>الاسم, رقم الهاتف, المسمى/الدور</code>
+            </p>
+            <textarea id="import-textarea" class="modal-textarea" placeholder="علي حسن, 07701234567, منسق قاعة بابل&#10;مريم أحمد, 07801234567, مسؤولة الاستقبال"></textarea>
+            <div class="modal-footer">
+                <button class="btn-action btn-secondary" id="btn-cancel-modal">إلغاء</button>
+                <button class="btn-action btn-primary" id="btn-submit-import">حفظ وتطبيق</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL  = window.SUPABASE_URL || 'https://YOUR_PROJECT.supabase.co';
+        const SUPABASE_ANON = window.SUPABASE_ANON || 'YOUR_ANON_KEY';
+        const EVENT_SLUG = new URLSearchParams(window.location.search).get('event') || 'ai-lecture-2026';
+
+        let allData = [];
+        let currentFilter = 'all';
+
+        // 1. Fetch Data
+        async function loadData() {
+            try {
+                // If local test server mode
+                if (!SUPABASE_URL || SUPABASE_URL.includes('YOUR_PROJECT')) {
+                    const res = await fetch(`/api/events/${EVENT_SLUG}`);
+                    if (res.ok) {
+                        const json = await res.json();
+                        // Build table from server event
+                        renderMockOrData(json);
+                        return;
+                    }
+                }
+
+                // Call Supabase RPC get_admin_dashboard
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_admin_dashboard`, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SUPABASE_ANON,
+                        'Authorization': `Bearer ${SUPABASE_ANON}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ p_event_slug: EVENT_SLUG })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    allData = data.attendees || [];
+                    render();
+                }
+            } catch (err) {
+                console.warn('Load data error:', err);
+            }
+        }
+
+        function renderMockOrData(json) {
+            // Check localStorage cached attendees
+            const localAttendees = JSON.parse(localStorage.getItem('alfarabi_admin_attendees_' + EVENT_SLUG) || '[]');
+            allData = localAttendees;
+            render();
+        }
+
+        // 2. Render Table and Counters
+        function render() {
+            const tbody = document.getElementById('table-body');
+            const search = document.getElementById('search-input').value.trim().toLowerCase();
+
+            const volunteersCount = allData.filter(d => d.kind === 'volunteer').length;
+            const attendeesCount = allData.length - volunteersCount;
+
+            document.getElementById('stat-total').textContent = allData.length;
+            document.getElementById('stat-volunteers').textContent = volunteersCount;
+            document.getElementById('stat-attendees').textContent = attendeesCount;
+
+            document.getElementById('count-tab-all').textContent = allData.length;
+            document.getElementById('count-tab-vol').textContent = volunteersCount;
+            document.getElementById('count-tab-att').textContent = attendeesCount;
+
+            const filtered = allData.filter(item => {
+                if (currentFilter === 'volunteer' && item.kind !== 'volunteer') return false;
+                if (currentFilter === 'attendee' && item.kind === 'volunteer') return false;
+                if (!search) return true;
+                return (
+                    (item.full_name && item.full_name.toLowerCase().includes(search)) ||
+                    (item.phone && item.phone.includes(search)) ||
+                    (item.workplace && item.workplace.toLowerCase().includes(search)) ||
+                    (item.role_title && item.role_title.toLowerCase().includes(search)) ||
+                    (item.serial && item.serial.toLowerCase().includes(search))
+                );
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 40px; color: #94A3B8;">لا توجد سجلات مطابقة للبحث</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map((row, idx) => {
+                const isVol = row.kind === 'volunteer';
+                const timeStr = row.created_at ? new Date(row.created_at).toLocaleTimeString('ar-IQ', { hour: '2-digit', minute: '2-digit' }) : '—';
+                return `
+                    <tr>
+                        <td style="color: #64748B;">${idx + 1}</td>
+                        <td><span class="serial-tag">${row.serial || ('ALF-' + String(idx + 1).padStart(4, '0'))}</span></td>
+                        <td><strong>${escapeHtml(row.full_name)}</strong></td>
+                        <td>
+                            <span class="role-badge ${isVol ? 'role-badge--volunteer' : 'role-badge--attendee'}">
+                                ${isVol ? '⭐ متطوع تنظيم' : 'حاضر'}
+                            </span>
+                        </td>
+                        <td>${escapeHtml(row.role_title || '—')}</td>
+                        <td>${escapeHtml(row.workplace || '—')}</td>
+                        <td dir="ltr" style="text-align: right;">${escapeHtml(row.phone || '—')}</td>
+                        <td dir="ltr" style="text-align: right;">${escapeHtml(row.email || '—')}</td>
+                        <td>${timeStr}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // 3. Export to Excel / CSV with UTF-8 BOM
+        function exportExcel() {
+            if (allData.length === 0) {
+                alert('لا توجد بيانات حضور لتصديرها حالياً');
+                return;
+            }
+
+            const headers = ['رقم القيد', 'الاسم الكامل', 'الصفة', 'المسمى الوظيفي', 'مكان العمل/الكلية', 'رقم الهاتف', 'البريد الإلكتروني', 'وقت التسجيل'];
+            const rows = allData.map(d => [
+                `"${d.serial || ''}"`,
+                `"${(d.full_name || '').replace(/"/g, '""')}"`,
+                `"${d.kind === 'volunteer' ? 'متطوع' : 'حاضر'}"`,
+                `"${(d.role_title || '').replace(/"/g, '""')}"`,
+                `"${(d.workplace || '').replace(/"/g, '""')}"`,
+                `"\t${d.phone || ''}"`, // \t prevents Excel from formatting phone number as scientific notation
+                `"${d.email || ''}"`,
+                `"${d.created_at ? new Date(d.created_at).toLocaleString('ar-IQ') : ''}"`
+            ]);
+
+            const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `حضور_محاضرة_الذكاء_الاصطناعي_الفارابي_${new Date().toISOString().slice(0, 10)}.csv`;
+            link.click();
+        }
+
+        // 4. Import Volunteers
+        async function submitImport() {
+            const rawText = document.getElementById('import-textarea').value.trim();
+            if (!rawText) return;
+
+            const lines = rawText.split('\n');
+            const volunteersList = [];
+
+            for (const line of lines) {
+                const parts = line.split(/[,،]/).map(s => s.trim());
+                if (parts.length >= 2) {
+                    volunteersList.push({
+                        full_name: parts[0],
+                        phone: parts[1],
+                        role_title: parts[2] || 'متطوع تنظيم'
+                    });
+                }
+            }
+
+            if (volunteersList.length === 0) {
+                alert('يرجى التأكد من كتابة الاسم ورقم الهاتف على الأقل في كل سطر');
+                return;
+            }
+
+            // Save in localStorage for instant mock reactivity
+            const savedVols = JSON.parse(localStorage.getItem('alfarabi_volunteers_' + EVENT_SLUG) || '[]');
+            const updatedVols = [...savedVols, ...volunteersList];
+            localStorage.setItem('alfarabi_volunteers_' + EVENT_SLUG, JSON.stringify(updatedVols));
+
+            // Retroactively update allData
+            allData.forEach(item => {
+                const match = updatedVols.find(v => v.phone === item.phone || (v.full_name && item.full_name && item.full_name.includes(v.full_name)));
+                if (match) {
+                    item.kind = 'volunteer';
+                    if (match.role_title) item.role_title = match.role_title;
+                }
+            });
+
+            // Send to Supabase RPC if configured
+            if (SUPABASE_URL && !SUPABASE_URL.includes('YOUR_PROJECT')) {
+                try {
+                    await fetch(`${SUPABASE_URL}/rest/v1/rpc/import_volunteers_list`, {
+                        method: 'POST',
+                        headers: {
+                            'apikey': SUPABASE_ANON,
+                            'Authorization': `Bearer ${SUPABASE_ANON}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            p_event_slug: EVENT_SLUG,
+                            p_volunteers: volunteersList
+                        })
+                    });
+                } catch (e) {
+                    console.warn('RPC import failed:', e);
+                }
+            }
+
+            document.getElementById('import-modal').classList.remove('open');
+            document.getElementById('import-textarea').value = '';
+            render();
+            alert(`تم استيراد ${volunteersList.length} متطوع وتمييزهم بنجاح! ⭐`);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            const d = document.createElement('div');
+            d.appendChild(document.createTextNode(str));
+            return d.innerHTML;
+        }
+
+        // Setup Events
+        document.getElementById('btn-export-excel').addEventListener('click', exportExcel);
+        document.getElementById('btn-refresh').addEventListener('click', loadData);
+        document.getElementById('search-input').addEventListener('input', render);
+
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentFilter = btn.dataset.filter;
+                render();
+            });
+        });
+
+        // Modal triggers
+        document.getElementById('btn-import-modal').addEventListener('click', () => {
+            document.getElementById('import-modal').classList.add('open');
+        });
+        document.getElementById('btn-cancel-modal').addEventListener('click', () => {
+            document.getElementById('import-modal').classList.remove('open');
+        });
+        document.getElementById('btn-submit-import').addEventListener('click', submitImport);
+
+        // Auto poll every 10s
+        loadData();
+        setInterval(loadData, 10000);
+    </script>
+</body>
+</html>

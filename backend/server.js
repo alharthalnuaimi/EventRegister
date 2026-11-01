@@ -28,32 +28,34 @@ const mockStore = {
             name: 'محاضرة علمية: AI Is Not As We Know It — أ.د. ضياء الجميلي',
             event_date: '2026-11-02',
             is_open: true,
-            total_registrations: 0
+            total_registrations: 0,
+            total_volunteers: 0
         }
     },
-    registrations: new Map(), // phone_norm or email_norm -> record
-    certificates: new Map()   // reg_id -> cert
+    volunteers: new Map([
+        ['+9647701234567', { full_name: 'أحمد علي', role_title: 'منسق قاعة بابل' }]
+    ]),
+    registrations: new Map() // key -> record
 };
 
 // 3. Middlewares
 app.use(cors({ origin: '*' }));
-app.use(express.json({ limit: '100kb' }));
+app.use(express.json({ limit: '200kb' }));
 
 // 4. Serve Frontend Static Assets Directly
 const frontendPath = path.join(__dirname, '..', 'frontend');
 app.use(express.static(frontendPath));
 
-// 5. Shared IP Rate Limiting (Campus Wi-Fi friendly: 120 req/min per IP)
+// Clean URL routes
+app.get('/admin', (req, res) => res.sendFile(path.join(frontendPath, 'admin.html')));
+app.get('/display', (req, res) => res.sendFile(path.join(frontendPath, 'display.html')));
+
+// 5. Shared IP Rate Limiting (Campus Wi-Fi friendly: 1500 req/min for auditorium NAT)
 const limiter = rateLimit({
-    windowMs: config.RATE_LIMIT_WINDOW_MS,
-    max: config.RATE_LIMIT_MAX_REQUESTS,
+    windowMs: 60 * 1000,
+    max: 1500, // Elevated to prevent campus Wi-Fi blocking
     standardHeaders: true,
-    legacyHeaders: false,
-    message: {
-        success: false,
-        error_code: 'RATE_LIMITED',
-        message: 'تم تجاوز حد الطلبات المسموح به مؤقتاً. يرجى الانتظار دقيقة واحدة.'
-    }
+    legacyHeaders: false
 });
 app.use('/api/', limiter);
 
@@ -137,6 +139,7 @@ app.post('/api/events/:slug/register', async (req, res) => {
         const key = `${slug}_${phone_norm}`;
         const emailKey = `${slug}_${email_norm}`;
 
+        // Deduplication check
         if (mockStore.registrations.has(key) || mockStore.registrations.has(emailKey)) {
             const existing = mockStore.registrations.get(key) || mockStore.registrations.get(emailKey);
             return res.status(200).json({
@@ -145,23 +148,27 @@ app.post('/api/events/:slug/register', async (req, res) => {
                 registration_id: existing.id,
                 kind: existing.kind,
                 serial: existing.serial,
+                full_name: existing.full_name,
                 event_name: 'محاضرة علمية: AI Is Not As We Know It — أ.د. ضياء الجميلي',
                 message: 'أنت مسجل بالفعل في هذه الفعالية'
             });
         }
 
-        const regId = 'reg_' + Math.random().toString(36).substring(2, 10);
+        const isVol = mockStore.volunteers.has(phone_norm);
+        const regId = 'reg_' + Math.random().toString(36).substring(2, 8);
         const serial = 'ALF-2026-' + regId.toUpperCase().slice(-6);
+
         const record = {
             id: regId,
             full_name: String(full_name).trim(),
-            phone_norm,
-            email_norm,
+            phone: phone_norm,
+            email: email_norm,
             role_title: String(role_title || '').trim(),
             workplace: String(workplace || '').trim(),
             lang: lang || 'ar',
-            kind: 'attendee',
-            serial
+            kind: isVol ? 'volunteer' : 'attendee',
+            serial,
+            created_at: new Date().toISOString()
         };
 
         mockStore.registrations.set(key, record);
@@ -169,24 +176,18 @@ app.post('/api/events/:slug/register', async (req, res) => {
 
         if (mockStore.events[slug]) {
             mockStore.events[slug].total_registrations++;
-        } else {
-            mockStore.events['ai-lecture-2026'].total_registrations++;
+            if (isVol) mockStore.events[slug].total_volunteers++;
         }
-
-        mockStore.certificates.set(regId, {
-            status: 'ready',
-            serial,
-            file_path: `${serial}.pdf`
-        });
 
         return res.status(200).json({
             success: true,
             already_registered: false,
             registration_id: regId,
-            kind: 'attendee',
+            kind: isVol ? 'volunteer' : 'attendee',
             serial,
+            full_name: record.full_name,
             event_name: 'محاضرة علمية: AI Is Not As We Know It — أ.د. ضياء الجميلي',
-            message: 'تم التسجيل بنجاح!'
+            message: 'تم تسجيل الحضور بنجاح!'
         });
     }
 
@@ -210,13 +211,7 @@ app.post('/api/events/:slug/register', async (req, res) => {
             });
         }
 
-        if (!data.success) {
-            const statusCode = data.error_code === 'EVENT_CLOSED' ? 403 : 400;
-            return res.status(statusCode).json(data);
-        }
-
         return res.status(200).json(data);
-
     } catch (err) {
         console.error('Server registration crash:', err);
         return res.status(500).json({
@@ -226,40 +221,14 @@ app.post('/api/events/:slug/register', async (req, res) => {
     }
 });
 
-// GET /api/registrations/:id/certificate — Certificate status
-app.get('/api/registrations/:id/certificate', async (req, res) => {
-    const regId = req.params.id;
-
-    if (isMockMode) {
-        const cert = mockStore.certificates.get(regId);
-        if (!cert) return res.status(404).json({ success: false, message: 'Certificate not found' });
-        return res.json({ success: true, certificate: cert });
-    }
-
-    try {
-        const { data, error } = await supabase.rpc('get_certificate_status', {
-            p_registration_id: regId
-        });
-
-        if (error) throw error;
-        if (!data || data.status === 'not_found') {
-            return res.status(404).json({ success: false, message: 'Certificate not found' });
-        }
-
-        res.json({ success: true, certificate: data });
-    } catch (err) {
-        console.error('Error fetching certificate:', err);
-        res.status(500).json({ success: false, message: 'Failed to fetch certificate status' });
-    }
-});
-
-// Start Server
+// Restart or Start Server
 if (require.main === module) {
     app.listen(config.PORT, () => {
         console.log(`\n======================================================`);
         console.log(`🚀 [Al-Farabi Event Register Server] LIVE`);
-        console.log(`   Local URL:    http://localhost:${config.PORT}`);
-        console.log(`   Projector QR: http://localhost:${config.PORT}/display.html`);
+        console.log(`   Registration: http://localhost:${config.PORT}`);
+        console.log(`   Admin Dash:   http://localhost:${config.PORT}/admin`);
+        console.log(`   Projector QR: http://localhost:${config.PORT}/display`);
         console.log(`   Health Check: http://localhost:${config.PORT}/health`);
         console.log(`======================================================\n`);
     });

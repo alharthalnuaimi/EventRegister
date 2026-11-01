@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <meta name="description" content="أداة تسجيل حضور الفعاليات — سجّل حضورك بسرعة وسهولة">
+    <meta name="description" content="تسجيل حضور محاضرة الذكاء الاصطناعي — جامعة الفارابي">
     <meta name="theme-color" content="#0B132B">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>تسجيل الحضور</title>
+    <title>تسجيل الحضور — جامعة الفارابي</title>
 
-    <!-- Subsetted Arabic font — IBM Plex Sans Arabic (lightweight) -->
+    <!-- Google Fonts: IBM Plex Sans Arabic -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -18,29 +18,34 @@
 </head>
 <body>
 
-    <!-- ===== Ambient Background ===== -->
+    <!-- Ambient Glowing Background -->
     <div class="ambient-bg" aria-hidden="true">
         <div class="ambient-orb ambient-orb--1"></div>
         <div class="ambient-orb ambient-orb--2"></div>
         <div class="ambient-orb ambient-orb--3"></div>
     </div>
 
-    <!-- ===== Main Container ===== -->
+    <!-- Main Container -->
     <main class="register-main" id="register-main">
 
-        <!-- Header -->
+        <!-- University Header & Event Flyer Info -->
         <header class="register-header" id="register-header">
-            <div class="header-badge">
-                <svg class="header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-                    <circle cx="9" cy="7" r="4"/>
-                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                </svg>
+            <div class="university-banner">
+                <span class="uni-badge-gold">جامعة الفارابي • Alfarabi University</span>
+                <span class="public-invite-pill">دعوة عامة</span>
             </div>
-            <h1 class="header-title">تسجيل الحضور</h1>
-            <p class="header-subtitle" id="event-name-display">جارٍ التحميل...</p>
-            <!-- Language Toggle -->
+
+            <h1 class="event-headline" id="event-name-display">محاضرة علمية: AI Is Not As We Know It</h1>
+            <p class="speaker-title">يلقيها البروفيسور الدكتور <strong>ضياء الجميلي</strong></p>
+            <p class="speaker-sub">بروفيسور الذكاء الاصطناعي في جامعة Liverpool John Moores البريطانية</p>
+
+            <div class="event-meta-tags">
+                <span class="meta-tag">📅 الاثنين 2026/11/2</span>
+                <span class="meta-tag">⏰ 10:00 صباحاً</span>
+                <span class="meta-tag">📍 قاعة بابل</span>
+            </div>
+
+            <!-- Language Switcher -->
             <button class="lang-toggle" id="lang-toggle" type="button" aria-label="Switch to English">
                 <span class="lang-toggle-text">EN</span>
             </button>
@@ -48,13 +53,16 @@
 
         <!-- ===== Registration Form ===== -->
         <form class="register-form" id="register-form" novalidate autocomplete="on">
+            <div class="form-intro">
+                <h2 class="form-title" data-ar="تسجيل الحضور" data-en="Attendance Registration">تسجيل الحضور</h2>
+                <p class="form-desc" data-ar="يرجى إدخال بياناتك لتأكيد حضورك واستلام بطاقة الدخول الرقمية" data-en="Please enter your details to confirm your attendance and get your digital pass">يرجى إدخال بياناتك لتأكيد حضورك واستلام بطاقة الدخول الرقمية</p>
+            </div>
 
             <!-- الاسم الكامل -->
             <div class="form-group" id="group-fullname">
                 <label class="form-label" for="fullname">
-                    <svg class="label-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                     <span class="label-text" data-ar="الاسم الكامل" data-en="Full Name">الاسم الكامل</span>
-                    <span class="required-star" aria-hidden="true">*</span>
+                    <span class="required-star">*</span>
                 </label>
                 <input
                     type="text"
@@ -75,9 +83,8 @@
             <!-- رقم الهاتف -->
             <div class="form-group" id="group-phone">
                 <label class="form-label" for="phone">
-                    <svg class="label-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
                     <span class="label-text" data-ar="رقم الهاتف" data-en="Phone Number">رقم الهاتف</span>
-                    <span class="required-star" aria-hidden="true">*</span>
+                    <span class="required-star">*</span>
                 </label>
                 <input
                     type="tel"
@@ -90,7 +97,6 @@
                     autocomplete="tel"
                     inputmode="numeric"
                     required
-                    pattern="[\d\s\-\+\u0660-\u0669]+"
                     maxlength="20"
                 >
                 <span class="form-error" id="error-phone" role="alert"></span>
@@ -99,9 +105,8 @@
             <!-- البريد الإلكتروني -->
             <div class="form-group" id="group-email">
                 <label class="form-label" for="email">
-                    <svg class="label-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                     <span class="label-text" data-ar="البريد الإلكتروني" data-en="Email Address">البريد الإلكتروني</span>
-                    <span class="required-star" aria-hidden="true">*</span>
+                    <span class="required-star">*</span>
                 </label>
                 <input
                     type="email"
@@ -118,21 +123,20 @@
                 <span class="form-error" id="error-email" role="alert"></span>
             </div>
 
-            <!-- المسمى الوظيفي -->
+            <!-- المسمى الوظيفي / الدور -->
             <div class="form-group" id="group-role">
                 <label class="form-label" for="role">
-                    <svg class="label-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-                    <span class="label-text" data-ar="المسمى الوظيفي" data-en="Job Title">المسمى الوظيفي</span>
-                    <span class="required-star" aria-hidden="true">*</span>
+                    <span class="label-text" data-ar="المسمى الوظيفي / الصفة" data-en="Role / Title">المسمى الوظيفي / الصفة</span>
+                    <span class="required-star">*</span>
                 </label>
                 <input
                     type="text"
                     id="role"
                     name="role"
                     class="form-input"
-                    placeholder="مثال: مهندس برمجيات، طالب، أستاذ جامعي"
-                    data-ar-placeholder="مثال: مهندس برمجيات، طالب، أستاذ جامعي"
-                    data-en-placeholder="e.g. Software Engineer, Student, Professor"
+                    placeholder="مثال: طالب، باحث، أستاذ جامعي، مهندس"
+                    data-ar-placeholder="مثال: طالب، باحث، أستاذ جامعي، مهندس"
+                    data-en-placeholder="e.g. Student, Researcher, Professor, Engineer"
                     autocomplete="organization-title"
                     required
                     minlength="2"
@@ -141,21 +145,20 @@
                 <span class="form-error" id="error-role" role="alert"></span>
             </div>
 
-            <!-- مكان العمل / الجامعة -->
+            <!-- مكان العمل / الكلية -->
             <div class="form-group" id="group-workplace">
                 <label class="form-label" for="workplace">
-                    <svg class="label-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                    <span class="label-text" data-ar="مكان العمل / الجامعة" data-en="Workplace / University">مكان العمل / الجامعة</span>
-                    <span class="required-star" aria-hidden="true">*</span>
+                    <span class="label-text" data-ar="مكان العمل / الكلية أو الجامعة" data-en="Workplace / University">مكان العمل / الكلية أو الجامعة</span>
+                    <span class="required-star">*</span>
                 </label>
                 <input
                     type="text"
                     id="workplace"
                     name="workplace"
                     class="form-input"
-                    placeholder="مثال: جامعة بغداد، وزارة التعليم"
-                    data-ar-placeholder="مثال: جامعة بغداد، وزارة التعليم"
-                    data-en-placeholder="e.g. University of Baghdad, Ministry of Education"
+                    placeholder="مثال: جامعة الفارابي - هندسة الذكاء الاصطناعي"
+                    data-ar-placeholder="مثال: جامعة الفارابي - هندسة الذكاء الاصطناعي"
+                    data-en-placeholder="e.g. Alfarabi University - AI Engineering"
                     autocomplete="organization"
                     required
                     minlength="2"
@@ -164,19 +167,19 @@
                 <span class="form-error" id="error-workplace" role="alert"></span>
             </div>
 
-            <!-- الموافقة -->
+            <!-- إقرار التسجيل -->
             <div class="form-group form-group--consent" id="group-consent">
                 <label class="consent-label" for="consent">
-                    <input type="checkbox" id="consent" name="consent" class="consent-checkbox" required>
+                    <input type="checkbox" id="consent" name="consent" class="consent-checkbox" required checked>
                     <span class="consent-checkmark"></span>
-                    <span class="consent-text" data-ar="أوافق على تسجيل بياناتي لغرض حضور الفعالية" data-en="I consent to my data being recorded for event attendance">أوافق على تسجيل بياناتي لغرض حضور الفعالية</span>
+                    <span class="consent-text" data-ar="أؤكد صحة البيانات لغرض تسجيل حضور المحاضرة" data-en="I confirm my attendance details for the lecture">أؤكد صحة البيانات لغرض تسجيل حضور المحاضرة</span>
                 </label>
                 <span class="form-error" id="error-consent" role="alert"></span>
             </div>
 
             <!-- زر الإرسال -->
             <button type="submit" class="submit-btn" id="submit-btn">
-                <span class="submit-btn-text" data-ar="تسجيل الحضور" data-en="Register">تسجيل الحضور</span>
+                <span class="submit-btn-text" data-ar="تأكيد الحضور واستلام البطاقة" data-en="Confirm Attendance & Get Pass">تأكيد الحضور واستلام البطاقة</span>
                 <span class="submit-btn-loading" aria-hidden="true">
                     <svg class="spinner" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31.4 31.4" stroke-linecap="round"/></svg>
                     <span data-ar="جارٍ التسجيل..." data-en="Registering...">جارٍ التسجيل...</span>
@@ -184,79 +187,65 @@
             </button>
         </form>
 
-        <!-- ===== شاشات النتائج ===== -->
-
-        <!-- نجاح: حاضر -->
-        <div class="result-screen result-screen--success" id="screen-attendee" hidden>
-            <div class="result-icon result-icon--success">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-            </div>
-            <h2 class="result-title" data-ar="تم التسجيل بنجاح!" data-en="Registration Successful!">تم التسجيل بنجاح!</h2>
-            <p class="result-message" data-ar="شكراً لحضورك. تم تسجيل بياناتك بنجاح." data-en="Thank you for attending. Your data has been recorded successfully.">شكراً لحضورك. تم تسجيل بياناتك بنجاح.</p>
-            <div class="result-details" id="attendee-details"></div>
-        </div>
-
-        <!-- نجاح: متطوع (مع شهادة) -->
-        <div class="result-screen result-screen--volunteer" id="screen-volunteer" hidden>
-            <div class="result-icon result-icon--success">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-            </div>
-            <h2 class="result-title" data-ar="أهلاً بالمتطوع! ✨" data-en="Welcome, Volunteer! ✨">أهلاً بالمتطوع! ✨</h2>
-            <p class="result-message" data-ar="تم تسجيل حضورك. شهادتك قيد الإعداد..." data-en="Your attendance is recorded. Your certificate is being prepared...">تم تسجيل حضورك. شهادتك قيد الإعداد...</p>
-            <div class="cert-progress" id="cert-progress">
-                <div class="cert-progress-bar">
-                    <div class="cert-progress-fill" id="cert-progress-fill"></div>
+        <!-- ===== شاشة بطاقة الحضور الرسمية (Digital Pass) ===== -->
+        <div class="result-screen" id="screen-pass" hidden>
+            <div class="pass-wrapper">
+                <div class="pass-header">
+                    <div class="pass-stamp">جامعة الفارابي</div>
+                    <div class="pass-type-badge" id="pass-type-badge">بطاقة حضور رسمية</div>
                 </div>
-                <p class="cert-status" id="cert-status" data-ar="جارٍ إعداد الشهادة..." data-en="Preparing certificate...">جارٍ إعداد الشهادة...</p>
+
+                <div class="pass-body">
+                    <h2 class="pass-name" id="pass-name">—</h2>
+                    <p class="pass-role" id="pass-role">—</p>
+                    <p class="pass-workplace" id="pass-workplace">—</p>
+
+                    <div class="pass-divider"></div>
+
+                    <div class="pass-event-info">
+                        <div class="pass-event-title">AI Is Not As We Know It</div>
+                        <div class="pass-event-speaker">البروفيسور الدكتور ضياء الجميلي</div>
+                        <div class="pass-event-venue">📍 قاعة بابل • الاثنين 2026/11/2</div>
+                    </div>
+
+                    <div class="pass-footer">
+                        <div class="pass-serial-block">
+                            <span class="pass-label">رقم القيد الفريد</span>
+                            <span class="pass-serial" id="pass-serial">ALF-2026-000000</span>
+                        </div>
+                        <canvas id="pass-qr-canvas" width="90" height="90"></canvas>
+                    </div>
+                </div>
             </div>
-            <a class="download-btn" id="cert-download" href="#" download hidden>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                <span data-ar="تحميل الشهادة" data-en="Download Certificate">تحميل الشهادة</span>
-            </a>
-            <p class="cert-email-note" id="cert-email-note" data-ar="سيتم إرسال الشهادة أيضاً على بريدك الإلكتروني" data-en="The certificate will also be sent to your email" hidden>سيتم إرسال الشهادة أيضاً على بريدك الإلكتروني</p>
+
+            <div class="pass-actions">
+                <button type="button" class="btn-save-pass" onclick="window.print()">
+                    <span>🖨️ طباعة أو حفظ البطاقة</span>
+                </button>
+                <button type="button" class="btn-new-reg" id="btn-register-another">
+                    <span>تسجيل شخص آخر</span>
+                </button>
+            </div>
         </div>
 
-        <!-- مسجل مسبقاً -->
-        <div class="result-screen result-screen--already" id="screen-already" hidden>
-            <div class="result-icon result-icon--info">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-            </div>
-            <h2 class="result-title" data-ar="مسجّل مسبقاً" data-en="Already Registered">مسجّل مسبقاً</h2>
-            <p class="result-message" data-ar="أنت مسجّل بالفعل في هذه الفعالية. لا حاجة للتسجيل مرة أخرى." data-en="You are already registered for this event. No need to register again.">أنت مسجّل بالفعل في هذه الفعالية. لا حاجة للتسجيل مرة أخرى.</p>
-        </div>
-
-        <!-- الفعالية مغلقة -->
-        <div class="result-screen result-screen--closed" id="screen-closed" hidden>
-            <div class="result-icon result-icon--warning">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            </div>
-            <h2 class="result-title" data-ar="التسجيل مغلق" data-en="Registration Closed">التسجيل مغلق</h2>
-            <p class="result-message" id="closed-message" data-ar="التسجيل لهذه الفعالية غير متاح حالياً." data-en="Registration for this event is not currently available.">التسجيل لهذه الفعالية غير متاح حالياً.</p>
-        </div>
-
-        <!-- خطأ -->
+        <!-- شاشة الخطأ -->
         <div class="result-screen result-screen--error" id="screen-error" hidden>
-            <div class="result-icon result-icon--error">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-            </div>
-            <h2 class="result-title" data-ar="حدث خطأ" data-en="Something went wrong">حدث خطأ</h2>
-            <p class="result-message" id="error-message" data-ar="حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى." data-en="An unexpected error occurred. Please try again.">حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.</p>
-            <button class="retry-btn" id="retry-btn" type="button">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-                <span data-ar="إعادة المحاولة" data-en="Retry">إعادة المحاولة</span>
-            </button>
+            <div class="result-icon result-icon--error">⚠️</div>
+            <h2 class="result-title">تعذر إكمال التسجيل</h2>
+            <p class="result-message" id="error-message">حدث خطأ في الاتصال. يرجى المحاولة مرة أخرى.</p>
+            <button class="retry-btn" id="retry-btn" type="button">إعادة المحاولة</button>
         </div>
 
-        <!-- رابط واتساب للمساعدة -->
-        <div class="help-link" id="help-link">
-            <a href="https://wa.me/9647XXXXXXXXX" target="_blank" rel="noopener" class="whatsapp-link" id="whatsapp-link">
-                <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                <span data-ar="مشكلة؟ تواصل معنا عبر واتساب" data-en="Problem? Contact us on WhatsApp">مشكلة؟ تواصل معنا عبر واتساب</span>
-            </a>
-        </div>
+        <!-- Footer -->
+        <footer class="register-footer">
+            <p>جامعة الفارابي — قسم هندسة الذكاء الاصطناعي</p>
+            <p class="contact-line">هاتف الاستعلامات: <strong>7556</strong> | alfarabiuc.edu.iq</p>
+        </footer>
 
     </main>
 
+    <!-- QR Code Script -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

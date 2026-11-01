@@ -1,28 +1,24 @@
-# العقد المشترك — أداة تسجيل الفعاليات v1
+# العقد المشترك — أداة تسجيل حضور الفعاليات v2
+
+## الهدف
+تسجيل حضور سريع وخفيف للفعاليات المفتوحة (دعوة عامة)، بدون تعقيد، مع منع التكرار وإمكانية تصدير البيانات واستيراد المتطوعين لتمييزهم، وعرض شاشة تفاعلية للقاعة.
 
 ## التدفق
-1. الهاتف يمسح QR ← نموذج التسجيل ← POST /register ← الباك اند يحفظ في قاعدة البيانات
-2. متطوع؟ ← الباك اند يضيف صف شهادة (معلق)
-3. البوت يأخذ المعلق ← PDF ← تخزين خاص ← جاهز ← يرسله بالإيميل
-4. الواجهة تستعلم عن حالة الشهادة ← تعرض زر التحميل
-
-## القاعدة صفر
-التسجيل يُحفظ أولاً؛ الشهادة متابعة. إذا فشل البوت أو التخزين أو الإيميل، الشخص يبقى مسجلاً.
+1. الحاضر يمسح QR من شاشة القاعة ← يفتح نموذج التسجيل على هاتفه.
+2. يُدخل: الاسم، رقم الهاتف، الإيميل، المسمى، وجهة العمل.
+3. النظام يطابق مع جدول المتطوعين: إذا كان متطوعاً يُسجل كـ `volunteer` ويُمنح شارة خاصة.
+4. النظام يتحقق من عدم التكرار برقم الهاتف أو الإيميل.
+5. يحصل الحاضر فوراً على **بطاقة حضور رقمية رسمية (Attendee Pass)** برقم قيد فريد.
+6. تُحفظ البطاقة محلياً في جهاز الحاضر تلقائياً؛ عند إعادة فتح الرابط تظهر بطاقته مباشرة.
+7. الإدارة (Dashboard): إحصائيات حية، بحث وتصفية، استيراد متطوعين، وتصدير إكسل بنقرة واحدة.
 
 ## الجداول (Supabase Postgres)
 - `events`: id, slug, name, event_date, opens_at, closes_at, is_open
 - `volunteers`: id, event_id, full_name, phone_norm, email_norm, role_title
 - `registrations`: id (uuid), event_id, full_name, phone_norm, email_norm, role_title, workplace, lang (ar|en), kind (attendee|volunteer), volunteer_id, created_at
-- `certificates`: id (uuid), registration_id, volunteer_id, serial, status (pending|processing|ready|failed), file_path, attempts, last_error, emailed_at, created_at
 
-## القواعد
-- المطابقة بالهاتف أو الإيميل، أبداً بالاسم
-- phone_norm: E.164 (عراقي 07XX… يصبح +9647…)
-- email_norm: مقصوص، حروف صغيرة
-- فريد (event_id, phone_norm) و (event_id, email_norm)
-- الفعالية مفتوحة عندما is_open = true والوقت بين opens_at و closes_at
-
-## API
-- `GET /api/events/{slug}` → {name, event_date, is_open}
-- `POST /api/events/{slug}/register` → {registration_id, kind, already_registered}
-- `GET /api/registrations/{id}/certificate` → {status, download_url}
+## القواعد الأساسية
+- المطابقة بالهاتف (E.164: العراقي 07XX... يصبح +9647...) أو الإيميل (حروف صغيرة مقصوصة).
+- منع التكرار: `UNIQUE(event_id, phone_norm)` و `UNIQUE(event_id, email_norm)`.
+- التسجيل مسبقاً يعرض بطاقة الحضور المحفوظة مباشرة دون أخطاء.
+- القاعة مفتوحة للجميع؛ الهدف هو إحصاء دقيق وبيانات منظمة وإشادة بالمتطوعين.
