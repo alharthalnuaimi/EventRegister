@@ -3,8 +3,8 @@
  * Clean, fast, phone-deduplicated attendance logging
  */
 
-const SUPABASE_URL  = window.SUPABASE_URL || 'https://YOUR_PROJECT.supabase.co';
-const SUPABASE_ANON = window.SUPABASE_ANON || 'YOUR_ANON_KEY';
+const SUPABASE_URL  = window.SUPABASE_URL || 'https://vcpbxcnweqbmkxhqunxu.supabase.co';
+const SUPABASE_ANON = window.SUPABASE_ANON || 'sb_publishable_m0z1EoUWsULqo05YJnSzyg_VqoyixMS';
 const EVENT_SLUG = new URLSearchParams(window.location.search).get('event') || 'ai-lecture-2026';
 
 let currentLang = 'ar';

@@ -442,9 +442,10 @@
         </div>
     </div>
 
+    <script src="/config.js"></script>
     <script>
-        const SUPABASE_URL  = window.SUPABASE_URL || 'https://YOUR_PROJECT.supabase.co';
-        const SUPABASE_ANON = window.SUPABASE_ANON || 'YOUR_ANON_KEY';
+        const SUPABASE_URL  = window.SUPABASE_URL || 'https://vcpbxcnweqbmkxhqunxu.supabase.co';
+        const SUPABASE_ANON = window.SUPABASE_ANON || 'sb_publishable_m0z1EoUWsULqo05YJnSzyg_VqoyixMS';
         const EVENT_SLUG = new URLSearchParams(window.location.search).get('event') || 'ai-lecture-2026';
 
         let dataRows = [];
@@ -473,6 +474,22 @@
                     const result = await res.json();
                     dataRows = result.attendees || [];
                     render();
+                } else {
+                    const errJson = await res.json().catch(() => ({}));
+                    console.warn('Supabase RPC response:', res.status, errJson);
+                    if (res.status === 401 || res.status === 403 || errJson.code === '42501') {
+                        const tbody = document.getElementById('tableRows');
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="8" style="text-align: center; padding: 28px 20px; color: var(--gold-light); background: rgba(139, 0, 0, 0.2);">
+                                    <strong>تنبيه الصلاحيات الأكاديمية:</strong><br>
+                                    دالة لوحة التحكم <code>get_admin_dashboard</code> مقفلة في Supabase.<br>
+                                    لتفعيل استعراض الحضور مباشرة عبر الويب، يرجى تنفيذ الأمر التالي في Supabase SQL Editor:<br>
+                                    <code style="display: inline-block; background: var(--midnight); padding: 6px 12px; margin-top: 8px; border-radius: 4px; border: 1px solid var(--gold); user-select: all; font-family: monospace;">GRANT EXECUTE ON FUNCTION get_admin_dashboard(TEXT) TO anon, authenticated;</code>
+                                </td>
+                            </tr>
+                        `;
+                    }
                 }
             } catch (err) {
                 console.warn('Error loading records:', err);
