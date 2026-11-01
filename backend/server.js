@@ -223,7 +223,7 @@ app.post('/api/events/:slug/register', async (req, res) => {
 if (require.main === module) {
     app.listen(config.PORT, () => {
         console.log(`\n======================================================`);
-        console.log(`🚀 [Al-Farabi Event Register Server] LIVE`);
+        console.log(`[Al-Farabi Event Register Server] LIVE`);
         console.log(`   Registration: http://localhost:${config.PORT}`);
         console.log(`   Admin Dash:   http://localhost:${config.PORT}/admin`);
         console.log(`   Projector QR: http://localhost:${config.PORT}/display`);

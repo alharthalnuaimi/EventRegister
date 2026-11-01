@@ -1,7 +1,6 @@
 /**
- * أداة تسجيل الفعاليات — Event Attendance Tool v3
- * Alfarabi University · Streamlined Attendance (Phone-Only Deduplication)
- * ──────────────────────────────────────────────────────────────────────
+ * Al Farabi University — Event Attendance Engine
+ * Clean, fast, phone-deduplicated attendance logging
  */
 
 const SUPABASE_URL  = window.SUPABASE_URL || 'https://YOUR_PROJECT.supabase.co';
@@ -9,13 +8,12 @@ const SUPABASE_ANON = window.SUPABASE_ANON || 'YOUR_ANON_KEY';
 const EVENT_SLUG = new URLSearchParams(window.location.search).get('event') || 'ai-lecture-2026';
 
 let currentLang = 'ar';
-const TICKET_STORAGE_KEY = `alfarabi_ticket_${EVENT_SLUG}`;
-const ALL_TICKETS_KEY = `alfarabi_all_my_tickets_${EVENT_SLUG}`;
+const STORAGE_KEY = `alfarabi_pass_${EVENT_SLUG}`;
 
 /* ============================================================
-   شبكة مرنة مع إعادة المحاولة — Resilient Fetch
+   Resilient Network Transport
    ============================================================ */
-async function fetchWithRetry(url, options = {}, retries = 3, backoffMs = 800) {
+async function fetchWithRetry(url, options = {}, retries = 3, backoffMs = 600) {
     for (let i = 0; i < retries; i++) {
         try {
             const res = await fetch(url, options);
@@ -32,34 +30,7 @@ async function fetchWithRetry(url, options = {}, retries = 3, backoffMs = 800) {
 }
 
 /* ============================================================
-   عميل Supabase المباشر — Supabase Client
-   ============================================================ */
-const supabase = {
-    get headers() {
-        return {
-            'apikey': SUPABASE_ANON,
-            'Authorization': `Bearer ${SUPABASE_ANON}`,
-            'Content-Type': 'application/json',
-            'Prefer': 'return=representation'
-        };
-    },
-
-    async rpc(fnName, params = {}) {
-        const res = await fetchWithRetry(`${SUPABASE_URL}/rest/v1/rpc/${fnName}`, {
-            method: 'POST',
-            headers: this.headers,
-            body: JSON.stringify(params)
-        });
-        if (!res.ok) {
-            const err = await res.json().catch(() => ({}));
-            throw { status: res.status, ...err };
-        }
-        return res.json();
-    }
-};
-
-/* ============================================================
-   تطبيع رقم الهاتف — Phone Normalization
+   Phone Normalization (E.164 Iraqi & International)
    ============================================================ */
 function normalizePhone(raw) {
     if (!raw) return '';
@@ -79,37 +50,37 @@ function normalizePhone(raw) {
 }
 
 /* ============================================================
-   التحقق من صحة المدخلات — Form Validation (No Email)
+   Validation
    ============================================================ */
 const validators = {
     fullname(val) {
         val = (val || '').trim();
-        if (!val) return currentLang === 'ar' ? 'الاسم الكامل مطلوب' : 'Full name is required';
-        if (val.length < 3) return currentLang === 'ar' ? 'الاسم يجب أن يكون 3 أحرف على الأقل' : 'Name must be at least 3 characters';
+        if (!val) return currentLang === 'ar' ? 'يرجى إدخال الاسم الرباعي' : 'Full name is required';
+        if (val.length < 3) return currentLang === 'ar' ? 'الاسم يجب ألا يقل عن 3 أحرف' : 'Name must be at least 3 characters';
         return null;
     },
 
     phone(val) {
         val = (val || '').trim();
-        if (!val) return currentLang === 'ar' ? 'رقم الهاتف مطلوب' : 'Phone number is required';
+        if (!val) return currentLang === 'ar' ? 'يرجى إدخال رقم الهاتف' : 'Phone number is required';
         const norm = normalizePhone(val);
-        const iraqiPhoneRegex = /^\+9647\d{9}$/;
-        const generalPhoneRegex = /^\+\d{8,15}$/;
-        if (!iraqiPhoneRegex.test(norm) && !generalPhoneRegex.test(norm)) {
-            return currentLang === 'ar' ? 'رقم هاتف غير صحيح (مثال: 07XXXXXXXX)' : 'Invalid phone (e.g. 07XXXXXXXX)';
+        const iraqiPhone = /^\+9647\d{9}$/;
+        const generalPhone = /^\+\d{8,15}$/;
+        if (!iraqiPhone.test(norm) && !generalPhone.test(norm)) {
+            return currentLang === 'ar' ? 'صيغة رقم غير صحيحة (07XXXXXXXX)' : 'Invalid phone number format';
         }
         return null;
     },
 
     role(val) {
         val = (val || '').trim();
-        if (!val) return currentLang === 'ar' ? 'المسمى الوظيفي مطلوب' : 'Job title is required';
+        if (!val) return currentLang === 'ar' ? 'يرجى تدوين المسمى أو الصفة' : 'Role or title is required';
         return null;
     },
 
     workplace(val) {
         val = (val || '').trim();
-        if (!val) return currentLang === 'ar' ? 'مكان العمل / الكلية مطلوب' : 'Workplace is required';
+        if (!val) return currentLang === 'ar' ? 'يرجى تدوين الكلية أو جهة العمل' : 'Institution is required';
         return null;
     },
 
@@ -119,122 +90,111 @@ const validators = {
     }
 };
 
-function validateField(fieldId) {
-    const input = document.getElementById(fieldId);
-    const errorEl = document.getElementById(`error-${fieldId}`);
-    const group = document.getElementById(`group-${fieldId}`);
-    if (!input || !errorEl || !group) return true;
+function validateField(name) {
+    const inp = document.getElementById(`inp-${name}`);
+    const msg = document.getElementById(`msg-${name}`);
+    const grp = document.getElementById(`grp-${name}`);
+    if (!inp || !msg || !grp) return true;
 
-    let errorMsg = null;
-    let value = input.value;
-    if (fieldId === 'consent') {
-        errorMsg = validators.consent(input.checked);
-    } else if (validators[fieldId]) {
-        errorMsg = validators[fieldId](value);
+    let err = null;
+    if (name === 'consent') {
+        err = validators.consent(inp.checked);
+    } else if (validators[name]) {
+        err = validators[name](inp.value);
     }
 
-    if (errorMsg) {
-        group.classList.add('has-error');
-        errorEl.textContent = errorMsg;
+    if (err) {
+        grp.classList.add('has-error');
+        msg.textContent = err;
         return false;
     } else {
-        group.classList.remove('has-error');
-        errorEl.textContent = '';
+        grp.classList.remove('has-error');
+        msg.textContent = '';
         return true;
     }
 }
 
 function validateAll() {
     const fields = ['fullname', 'phone', 'role', 'workplace', 'consent'];
-    let allValid = true;
+    let valid = true;
     for (const f of fields) {
-        if (!validateField(f)) allValid = false;
+        if (!validateField(f)) valid = false;
     }
-    return allValid;
+    return valid;
 }
 
 /* ============================================================
-   إدارة التذاكر المحلية — Local Ticket Caching
+   Language Switching
    ============================================================ */
-function saveTicket(ticket) {
-    try {
-        localStorage.setItem(TICKET_STORAGE_KEY, JSON.stringify(ticket));
-        const all = JSON.parse(localStorage.getItem(ALL_TICKETS_KEY) || '[]');
-        if (!all.some(t => t.serial === ticket.serial)) {
-            all.push(ticket);
-            localStorage.setItem(ALL_TICKETS_KEY, JSON.stringify(all));
-        }
+function setLanguage(lang) {
+    currentLang = lang;
+    const html = document.documentElement;
 
-        // Add to admin mock store for instant reactivity
-        const adminList = JSON.parse(localStorage.getItem('alfarabi_admin_attendees_' + EVENT_SLUG) || '[]');
-        if (!adminList.some(a => a.phone === ticket.phone || a.serial === ticket.serial)) {
-            adminList.unshift({
-                full_name: ticket.full_name,
-                phone: ticket.phone,
-                role_title: ticket.role,
-                workplace: ticket.workplace,
-                kind: ticket.kind,
-                serial: ticket.serial,
-                created_at: new Date().toISOString()
-            });
-            localStorage.setItem('alfarabi_admin_attendees_' + EVENT_SLUG, JSON.stringify(adminList));
-        }
-    } catch (e) {}
-}
-
-function getSavedTicket() {
-    try {
-        const item = localStorage.getItem(TICKET_STORAGE_KEY);
-        return item ? JSON.parse(item) : null;
-    } catch (e) {
-        return null;
-    }
-}
-
-/* ============================================================
-   عرض تأكيد الحضور — Render Attendance Confirmation
-   ============================================================ */
-function renderConfirmation(data) {
-    document.getElementById('register-form').style.display = 'none';
-    const screen = document.getElementById('screen-confirmed');
-    screen.hidden = false;
-    screen.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-    document.getElementById('conf-name').textContent = data.full_name || '—';
-    document.getElementById('conf-role').textContent = data.role || '—';
-    document.getElementById('conf-workplace').textContent = data.workplace || '—';
-    document.getElementById('conf-serial').textContent = data.serial || 'ALF-2026-000000';
-
-    const badgeEl = document.getElementById('confirmed-badge');
-    if (data.kind === 'volunteer') {
-        badgeEl.textContent = '⭐ متطوع تنظيم معتمد';
-        badgeEl.className = 'confirmed-badge confirmed-badge--volunteer';
-    } else if (data.already_registered) {
-        badgeEl.textContent = 'تم تسجيل حضورك مسبقاً';
-        badgeEl.className = 'confirmed-badge confirmed-badge--already';
+    if (lang === 'en') {
+        html.setAttribute('lang', 'en');
+        html.setAttribute('dir', 'ltr');
+        document.getElementById('langSwitchText').textContent = 'ع';
     } else {
-        badgeEl.textContent = 'تم تأكيد الحضور رسمياً';
-        badgeEl.className = 'confirmed-badge confirmed-badge--attendee';
+        html.setAttribute('lang', 'ar');
+        html.setAttribute('dir', 'rtl');
+        document.getElementById('langSwitchText').textContent = 'EN';
+    }
+
+    document.querySelectorAll('[data-ar][data-en]').forEach(el => {
+        el.textContent = lang === 'ar' ? el.dataset.ar : el.dataset.en;
+    });
+
+    document.querySelectorAll('[data-ar-placeholder][data-en-placeholder]').forEach(el => {
+        el.placeholder = lang === 'ar' ? el.dataset.arPlaceholder : el.dataset.enPlaceholder;
+    });
+}
+
+/* ============================================================
+   Confirmation View & Local Cache
+   ============================================================ */
+function showConfirmation(record) {
+    document.getElementById('attendanceForm').style.display = 'none';
+    const conf = document.getElementById('confirmScreen');
+    conf.hidden = false;
+    conf.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    document.getElementById('res-name').textContent = record.full_name || '—';
+    document.getElementById('res-role').textContent = record.role || '—';
+    document.getElementById('res-workplace').textContent = record.workplace || '—';
+    document.getElementById('res-serial').textContent = record.serial || 'ALF-2026-000000';
+
+    const pill = document.getElementById('confirmStatusPill');
+    const pillTxt = document.getElementById('confirmStatusText');
+
+    if (record.kind === 'volunteer') {
+        pill.className = 'confirm-pill confirm-pill--volunteer';
+        pillTxt.textContent = currentLang === 'ar' ? 'فريق التنظيم المعين' : 'Official Organizing Team';
+    } else if (record.already_registered) {
+        pill.className = 'confirm-pill confirm-pill--already';
+        pillTxt.textContent = currentLang === 'ar' ? 'تم تسجيل حضورك مسبقاً' : 'Already Recorded';
+    } else {
+        pill.className = 'confirm-pill confirm-pill--attendee';
+        pillTxt.textContent = currentLang === 'ar' ? 'تم توثيق الحضور رسمياً' : 'Attendance Formally Recorded';
     }
 }
 
 function showForm() {
-    document.getElementById('register-form').style.display = '';
-    document.getElementById('screen-confirmed').hidden = true;
-    document.getElementById('screen-error').hidden = true;
+    document.getElementById('attendanceForm').style.display = '';
+    document.getElementById('confirmScreen').hidden = true;
+    document.getElementById('errorScreen').hidden = true;
 
-    const btn = document.getElementById('submit-btn');
+    const btn = document.getElementById('btnSubmit');
     btn.classList.remove('is-loading');
     btn.disabled = false;
 }
 
 /* ============================================================
-   إرسال تأكيد الحضور — Submit Attendance
+   Registration API
    ============================================================ */
-async function register(formData) {
+async function registerAttendance(formData) {
     const phone_norm = normalizePhone(formData.phone);
 
-    // 0. Local API server fallback
+    // 1. Local backend / server mode
     if (!SUPABASE_URL || SUPABASE_URL.includes('YOUR_PROJECT')) {
         const res = await fetchWithRetry(`/api/events/${encodeURIComponent(EVENT_SLUG)}/register`, {
             method: 'POST',
@@ -242,7 +202,6 @@ async function register(formData) {
             body: JSON.stringify({
                 full_name: formData.fullname.trim(),
                 phone: formData.phone,
-                email: '',
                 role_title: formData.role.trim(),
                 workplace: formData.workplace.trim(),
                 lang: currentLang
@@ -250,7 +209,7 @@ async function register(formData) {
         });
         const result = await res.json();
         if (!res.ok && !result.already_registered) {
-            throw new Error(result.message || 'فشل التسجيل');
+            throw new Error(result.message || (currentLang === 'ar' ? 'تعذر إتمام التسجيل' : 'Registration failed'));
         }
         return {
             registration_id: result.registration_id,
@@ -264,7 +223,7 @@ async function register(formData) {
         };
     }
 
-    // 1. Direct Supabase Atomic RPC
+    // 2. Direct Supabase Atomic RPC
     const rpcPayload = {
         p_event_slug: EVENT_SLUG,
         p_full_name: formData.fullname.trim(),
@@ -275,9 +234,19 @@ async function register(formData) {
         p_lang: currentLang
     };
 
-    const result = await supabase.rpc('register_attendee', rpcPayload);
-    if (!result || !result.success) {
-        throw new Error(result?.message || 'تعذر تسجيل الحضور');
+    const res = await fetchWithRetry(`${SUPABASE_URL}/rest/v1/rpc/register_attendee`, {
+        method: 'POST',
+        headers: {
+            'apikey': SUPABASE_ANON,
+            'Authorization': `Bearer ${SUPABASE_ANON}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(rpcPayload)
+    });
+
+    const result = await res.json();
+    if (!res.ok || !result.success) {
+        throw new Error(result?.message || (currentLang === 'ar' ? 'تعذر إتمام التسجيل' : 'Registration failed'));
     }
 
     return {
@@ -292,64 +261,72 @@ async function register(formData) {
     };
 }
 
-async function handleSubmit(e) {
-    e.preventDefault();
-
-    const btn = document.getElementById('submit-btn');
-    if (btn.disabled) return;
-
-    if (!validateAll()) {
-        const firstError = document.querySelector('.form-group.has-error');
-        if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        return;
-    }
-
-    btn.classList.add('is-loading');
-    btn.disabled = true;
-
-    const formData = {
-        fullname:  document.getElementById('fullname').value,
-        phone:     document.getElementById('phone').value,
-        role:      document.getElementById('role').value,
-        workplace: document.getElementById('workplace').value
-    };
-
-    try {
-        const result = await register(formData);
-        saveTicket(result);
-        renderConfirmation(result);
-    } catch (err) {
-        console.error('Registration failed:', err);
-        document.getElementById('error-message').textContent = err.message || 'حدث خطأ في الاتصال. يرجى المحاولة مرة أخرى.';
-        document.getElementById('register-form').style.display = 'none';
-        document.getElementById('screen-error').hidden = false;
-    } finally {
-        btn.classList.remove('is-loading');
-        btn.disabled = false;
-    }
-}
-
 /* ============================================================
-   بدء التشغيل — Init
+   Event Listeners
    ============================================================ */
 document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('register-form')?.addEventListener('submit', handleSubmit);
-    document.getElementById('retry-btn')?.addEventListener('click', showForm);
-    document.getElementById('btn-register-another')?.addEventListener('click', showForm);
+    // Detect system lang
+    const navLang = navigator.language || navigator.userLanguage || 'ar';
+    setLanguage(navLang.startsWith('en') ? 'en' : 'ar');
 
-    ['fullname', 'phone', 'role', 'workplace'].forEach(id => {
-        const input = document.getElementById(id);
-        if (!input) return;
-        input.addEventListener('blur', () => validateField(id));
-        input.addEventListener('input', () => {
-            const group = document.getElementById(`group-${id}`);
-            if (group && group.classList.contains('has-error')) validateField(id);
+    document.getElementById('langToggle')?.addEventListener('click', () => {
+        setLanguage(currentLang === 'ar' ? 'en' : 'ar');
+    });
+
+    document.getElementById('btnRepeat')?.addEventListener('click', showForm);
+    document.getElementById('btnRetry')?.addEventListener('click', showForm);
+
+    ['fullname', 'phone', 'role', 'workplace'].forEach(name => {
+        const inp = document.getElementById(`inp-${name}`);
+        if (!inp) return;
+        inp.addEventListener('blur', () => validateField(name));
+        inp.addEventListener('input', () => {
+            const grp = document.getElementById(`grp-${name}`);
+            if (grp && grp.classList.contains('has-error')) validateField(name);
         });
     });
 
-    // Check if user already registered on this device
-    const saved = getSavedTicket();
-    if (saved && saved.full_name) {
-        renderConfirmation(saved);
-    }
+    document.getElementById('attendanceForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('btnSubmit');
+        if (btn.disabled) return;
+
+        if (!validateAll()) {
+            const firstErr = document.querySelector('.field-group.has-error');
+            if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+
+        btn.classList.add('is-loading');
+        btn.disabled = true;
+
+        const formData = {
+            fullname:  document.getElementById('inp-fullname').value,
+            phone:     document.getElementById('inp-phone').value,
+            role:      document.getElementById('inp-role').value,
+            workplace: document.getElementById('inp-workplace').value
+        };
+
+        try {
+            const record = await registerAttendance(formData);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(record));
+            showConfirmation(record);
+        } catch (err) {
+            console.error('Attendance error:', err);
+            document.getElementById('errorText').textContent = err.message || 'تعذر الاتصال بالخادم. يرجى المحاولة ثانية.';
+            document.getElementById('attendanceForm').style.display = 'none';
+            document.getElementById('errorScreen').hidden = false;
+        } finally {
+            btn.classList.remove('is-loading');
+            btn.disabled = false;
+        }
+    });
+
+    // Check cached pass
+    try {
+        const cached = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+        if (cached && cached.full_name) {
+            showConfirmation(cached);
+        }
+    } catch (e) {}
 });

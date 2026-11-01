@@ -3,27 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="شاشة عرض QR لتسجيل حضور محاضرة الذكاء الاصطناعي — جامعة الفارابي">
-    <meta name="theme-color" content="#0B132B">
-    <title>شاشة التسجيل — جامعة الفارابي</title>
+    <meta name="description" content="منصة الحضور المباشر — قاعة بابل، جامعة الفارابي">
+    <meta name="theme-color" content="#02040f">
+    <title>منصة الحضور المباشر — جامعة الفارابي</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
-            --navy:    #0B132B;
-            --navy-light: #1C2541;
-            --crimson: #A51C30;
-            --gold:    #D4AF37;
-            --gray:    #64748B;
+            --midnight: #02040f;
+            --navy: #05082b;
+            --navy-mid: #0d1245;
+            --crimson: #8b0000;
+            --gold: #c9a84c;
+            --gold-light: #e8c97a;
+            --ivory: #f5f0e8;
+            --ivory-dim: rgba(245, 240, 232, 0.65);
+            --glass: rgba(13, 18, 69, 0.55);
+            --glass-border: rgba(201, 168, 76, 0.22);
+            --font-heading: 'Syne', 'IBM Plex Sans Arabic', sans-serif;
+            --font-body: 'IBM Plex Sans Arabic', sans-serif;
         }
 
         body {
-            font-family: 'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, Arial, sans-serif;
-            background: linear-gradient(145deg, #F8FAFC 0%, #EDF2F7 100%);
-            color: var(--navy);
+            font-family: var(--font-body);
+            background: var(--midnight);
+            color: var(--ivory);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -31,60 +38,107 @@
             justify-content: center;
             padding: 30px 20px;
             text-align: center;
+            position: relative;
+            overflow-x: hidden;
         }
 
-        .header-badge {
-            display: inline-block;
-            background: var(--navy);
-            color: var(--gold);
-            font-weight: 700;
-            font-size: clamp(0.85rem, 1.8vw, 1.15rem);
-            padding: 6px 20px;
-            border-radius: 50px;
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: 
+                radial-gradient(circle at 50% 10%, rgba(201, 168, 76, 0.1) 0%, transparent 60%),
+                radial-gradient(circle at 80% 80%, rgba(139, 0, 0, 0.15) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .display-shell {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .crest-header {
             margin-bottom: 16px;
-            letter-spacing: 0.03em;
-            box-shadow: 0 4px 15px rgba(11, 19, 43, 0.2);
         }
 
-        .display-title {
-            font-size: clamp(1.8rem, 4vw, 3.2rem);
-            font-weight: 700;
-            color: var(--navy);
-            margin-bottom: 10px;
-            line-height: 1.25;
+        .crest-header img {
+            width: 84px;
+            height: 84px;
+            object-fit: contain;
+            border-radius: 50%;
+            padding: 4px;
+            background: radial-gradient(circle, var(--navy-mid) 0%, var(--midnight) 100%);
+            border: 1.5px solid var(--gold);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(201, 168, 76, 0.25);
         }
 
-        .display-subtitle {
-            font-size: clamp(1.1rem, 2.2vw, 1.6rem);
-            color: var(--crimson);
-            font-weight: 600;
-            margin-bottom: 25px;
-        }
-
-        .venue-pill {
+        .brand-subtitle {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            background: rgba(165, 28, 48, 0.08);
-            border: 1px solid rgba(165, 28, 48, 0.2);
-            color: var(--crimson);
-            font-size: 1rem;
-            font-weight: 600;
-            padding: 6px 18px;
-            border-radius: 30px;
-            margin-bottom: 25px;
+            padding: 4px 16px;
+            background: rgba(245, 240, 232, 0.08);
+            border: 1px solid var(--glass-border);
+            border-radius: 100px;
+            font-size: 13px;
+            color: var(--gold-light);
+            letter-spacing: 0.05em;
+            margin-bottom: 16px;
         }
 
-        .qr-container {
+        .display-title {
+            font-family: var(--font-heading);
+            font-size: clamp(26px, 4.5vw, 48px);
+            font-weight: 800;
+            color: var(--ivory);
+            line-height: 1.2;
+            margin-bottom: 10px;
+            letter-spacing: -0.02em;
+        }
+
+        .display-title span {
+            background: linear-gradient(135deg, var(--ivory) 20%, var(--gold-light) 60%, var(--gold) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .speaker-credit {
+            font-size: clamp(15px, 2vw, 19px);
+            color: var(--ivory-dim);
+            margin-bottom: 22px;
+        }
+
+        .speaker-credit strong {
+            color: var(--gold-light);
+        }
+
+        .venue-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 18px;
+            background: rgba(13, 18, 69, 0.6);
+            border: 1px solid rgba(201, 168, 76, 0.25);
+            border-radius: 8px;
+            font-size: 14px;
+            color: var(--ivory-dim);
+            margin-bottom: 26px;
+        }
+
+        .qr-frame {
             background: #FFFFFF;
-            border: 16px solid #FFFFFF;
-            outline: 4px solid var(--navy);
+            padding: 18px;
             border-radius: 20px;
-            padding: 15px;
-            margin-bottom: 25px;
+            border: 3px solid var(--gold);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(201, 168, 76, 0.2);
+            margin-bottom: 22px;
             display: inline-block;
-            box-shadow: 0 15px 45px rgba(11, 19, 43, 0.15);
-            transition: transform 0.3s ease;
         }
 
         #qr-canvas {
@@ -94,146 +148,130 @@
         }
 
         @media (min-width: 768px) {
-            #qr-canvas {
-                width: 360px;
-                height: 360px;
-            }
+            #qr-canvas { width: 340px; height: 340px; }
         }
 
         @media (min-width: 1400px) {
-            #qr-canvas {
-                width: 420px;
-                height: 420px;
-            }
+            #qr-canvas { width: 400px; height: 400px; }
         }
 
-        .display-instruction {
-            font-size: clamp(1rem, 2vw, 1.35rem);
-            font-weight: 600;
-            color: var(--navy);
-            margin-bottom: 12px;
+        .instruction-line {
+            font-size: 16px;
+            color: var(--ivory);
+            font-weight: 500;
+            margin-bottom: 20px;
         }
 
-        .display-url {
-            font-size: clamp(1rem, 2vw, 1.4rem);
-            font-weight: 700;
-            color: var(--navy-light);
-            font-family: monospace;
-            direction: ltr;
-            margin-bottom: 25px;
-            word-break: break-all;
-            background: rgba(255, 255, 255, 0.8);
-            padding: 6px 16px;
-            border-radius: 8px;
-            border: 1px solid #CBD5E1;
-            display: inline-block;
-        }
-
-        .live-counter {
+        /* Live Counter Ribbon */
+        .counter-strip {
             display: inline-flex;
             align-items: center;
-            justify-content: center;
             gap: 14px;
-            padding: 14px 36px;
-            background: linear-gradient(135deg, var(--navy) 0%, #1C2541 100%);
-            color: #FFFFFF;
-            border-radius: 50px;
-            font-size: clamp(1.1rem, 2.2vw, 1.45rem);
-            font-weight: 600;
-            box-shadow: 0 8px 30px rgba(11, 19, 43, 0.3);
-            border: 2px solid var(--gold);
+            padding: 12px 32px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 100px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            margin-bottom: 28px;
         }
 
-        .counter-dot {
-            width: 14px;
-            height: 14px;
+        .status-dot {
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
             background: #10B981;
-            animation: pulse-dot 1.8s ease-in-out infinite;
+            box-shadow: 0 0 12px #10B981;
+            animation: pulse-dot 2s infinite ease-in-out;
         }
 
         @keyframes pulse-dot {
-            0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 12px #10B981; }
-            50%      { opacity: 0.4; transform: scale(0.75); }
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.8); }
         }
 
-        .counter-number {
-            font-size: clamp(1.6rem, 3.2vw, 2.6rem);
-            font-weight: 700;
-            color: var(--gold);
+        .counter-label {
+            font-size: 15px;
+            color: var(--ivory-dim);
+            font-weight: 500;
         }
 
-        .export-btns {
-            margin-top: 25px;
+        .counter-digits {
+            font-family: var(--font-heading);
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--gold-light);
+            letter-spacing: 0.05em;
+        }
+
+        .export-links {
             display: flex;
             gap: 12px;
             flex-wrap: wrap;
             justify-content: center;
         }
 
-        .export-btn {
-            padding: 8px 20px;
-            font-family: 'IBM Plex Sans Arabic', sans-serif;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--navy);
-            background: #FFFFFF;
-            border: 1.5px solid var(--navy);
+        .btn-exp {
+            background: transparent;
+            border: 1px solid rgba(245, 240, 232, 0.15);
+            color: var(--ivory-dim);
+            padding: 8px 18px;
             border-radius: 6px;
+            font-size: 13px;
             cursor: pointer;
+            font-family: inherit;
             transition: all 0.2s ease;
         }
 
-        .export-btn:hover {
-            background: var(--navy);
-            color: #FFFFFF;
-        }
-
-        .footer-note {
-            margin-top: 35px;
-            font-size: 0.85rem;
-            color: var(--gray);
+        .btn-exp:hover {
+            border-color: var(--gold);
+            color: var(--ivory);
+            background: rgba(201, 168, 76, 0.08);
         }
 
         @media print {
-            .export-btns, .footer-note, .live-counter { display: none; }
-            body { padding: 0; background: #FFFFFF; }
-            .qr-container { border-width: 20px; outline-width: 6px; }
+            .export-links, .counter-strip { display: none; }
+            body { background: #FFFFFF; color: #000000; }
         }
     </style>
 </head>
 <body>
 
-    <div class="header-badge">جامعة الفارابي — قسم هندسة الذكاء الاصطناعي</div>
+    <div class="display-shell">
+        <div class="crest-header">
+            <img src="logo.jpg" alt="Al Farabi University Crest">
+        </div>
 
-    <h1 class="display-title" id="display-title">محاضرة: AI Is Not As We Know It</h1>
-    <p class="display-subtitle" id="display-subtitle">البروفيسور الدكتور ضياء الجميلي (Liverpool John Moores University)</p>
+        <div class="brand-subtitle">جامعة الفارابي • قسم هندسة الذكاء الاصطناعي</div>
 
-    <div class="venue-pill">
-        <span>📍 قاعة بابل</span>
-        <span>•</span>
-        <span>الاثنين 2026/11/2 — الساعة 10:00 صباحاً</span>
+        <h1 class="display-title" id="display-title">
+            <span>AI Is Not As We Know It</span>
+        </h1>
+
+        <p class="speaker-credit">المحاضر: <strong>البروفيسور الدكتور ضياء الجميلي</strong> (جامعة ليفربول جون مورس)</p>
+
+        <div class="venue-chip">
+            <span>قاعة بابل</span>
+            <span>—</span>
+            <span>الاثنين 2026/11/2 • 10:00 صباحاً</span>
+        </div>
+
+        <div class="qr-frame">
+            <canvas id="qr-canvas"></canvas>
+        </div>
+
+        <p class="instruction-line">امسح الرمز بكاميرا هاتفك لتأكيد الحضور الرسمي</p>
+
+        <div class="counter-strip">
+            <span class="status-dot"></span>
+            <span class="counter-label">إجمالي الحضور المسجل:</span>
+            <span class="counter-digits" id="counter-number">0</span>
+        </div>
+
+        <div class="export-links">
+            <button class="btn-exp" onclick="exportQR('png')">تصدير الرمز كصورة PNG</button>
+            <button class="btn-exp" onclick="exportQR('svg')">تصدير الرمز كمتجه SVG</button>
+        </div>
     </div>
-
-    <div class="qr-container">
-        <canvas id="qr-canvas"></canvas>
-    </div>
-
-    <p class="display-instruction">امسح الرمز بكاميرا هاتفك لتسجيل حضورك في المحاضرة</p>
-    <p class="display-url" id="display-url"></p>
-
-    <div class="live-counter" id="live-counter">
-        <span class="counter-dot"></span>
-        <span>عدد الحاضرين المسجلين:</span>
-        <span class="counter-number" id="counter-number">0</span>
-    </div>
-
-    <div class="export-btns">
-        <button class="export-btn" id="export-png" onclick="exportQR('png')">تصدير QR كصورة PNG</button>
-        <button class="export-btn" id="export-svg" onclick="exportQR('svg')">تصدير QR كمتجه SVG</button>
-    </div>
-
-    <p class="footer-note">نظام تسجيل الفعاليات — جامعة الفارابي</p>
 
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <script>
@@ -241,46 +279,42 @@
         const SUPABASE_ANON = window.SUPABASE_ANON || 'YOUR_ANON_KEY';
         const EVENT_SLUG = new URLSearchParams(window.location.search).get('event') || 'ai-lecture-2026';
 
-        // Construct mobile registration URL
-        const basePath = window.location.pathname.replace(/display\.html$/i, '');
-        const REGISTER_URL = window.location.origin + basePath + 'index.html?event=' + encodeURIComponent(EVENT_SLUG);
-        document.getElementById('display-url').textContent = REGISTER_URL;
+        const basePath = window.location.pathname.replace(/(?:display\.html|display)$/i, '');
+        const REGISTER_URL = window.location.origin + basePath + '?event=' + encodeURIComponent(EVENT_SLUG);
 
-        // Render high-contrast QR
         const canvas = document.getElementById('qr-canvas');
         QRCode.toCanvas(canvas, REGISTER_URL, {
-            width: canvas.clientWidth || 360,
+            width: canvas.clientWidth || 340,
             margin: 2,
-            color: { dark: '#0B132B', light: '#FFFFFF' },
+            color: { dark: '#02040f', light: '#FFFFFF' },
             errorCorrectionLevel: 'H'
         }, function (err) {
-            if (err) console.error('QR rendering error:', err);
+            if (err) console.error('QR error:', err);
         });
 
         function exportQR(format) {
             if (format === 'png') {
                 const link = document.createElement('a');
-                link.download = `qr-${EVENT_SLUG}.png`;
+                link.download = `alfarabi-qr-${EVENT_SLUG}.png`;
                 link.href = canvas.toDataURL('image/png');
                 link.click();
             } else if (format === 'svg') {
                 QRCode.toString(REGISTER_URL, {
                     type: 'svg',
                     margin: 2,
-                    color: { dark: '#0B132B', light: '#FFFFFF' },
+                    color: { dark: '#02040f', light: '#FFFFFF' },
                     errorCorrectionLevel: 'H'
                 }, function (err, svg) {
                     if (err) return console.error(err);
                     const blob = new Blob([svg], { type: 'image/svg+xml' });
                     const link = document.createElement('a');
-                    link.download = `qr-${EVENT_SLUG}.svg`;
+                    link.download = `alfarabi-qr-${EVENT_SLUG}.svg`;
                     link.href = URL.createObjectURL(blob);
                     link.click();
                 });
             }
         }
 
-        // Live counter: Uses get_event_display RPC or fallback, polled every 8 seconds
         async function updateCounter() {
             try {
                 if (!SUPABASE_URL || SUPABASE_URL.includes('YOUR_PROJECT')) {
@@ -289,7 +323,6 @@
                         const data = await res.json();
                         if (data.event && typeof data.event.total_registrations !== 'undefined') {
                             document.getElementById('counter-number').textContent = data.event.total_registrations;
-                            if (data.event.name) document.getElementById('display-title').textContent = data.event.name;
                             return;
                         }
                     }
@@ -309,34 +342,13 @@
                     const data = await res.json();
                     if (data && typeof data.total_registrations !== 'undefined') {
                         document.getElementById('counter-number').textContent = data.total_registrations;
-                        if (data.name) document.getElementById('display-title').textContent = data.name;
-                        return;
                     }
                 }
-
-                // Fallback to direct count header
-                const countRes = await fetch(`${SUPABASE_URL}/rest/v1/registrations?select=id`, {
-                    headers: {
-                        'apikey': SUPABASE_ANON,
-                        'Authorization': `Bearer ${SUPABASE_ANON}`,
-                        'Prefer': 'count=exact',
-                        'Range': '0-0'
-                    }
-                });
-                const countRange = countRes.headers.get('content-range');
-                if (countRange) {
-                    const total = countRange.split('/')[1];
-                    if (total && total !== '*') {
-                        document.getElementById('counter-number').textContent = total;
-                    }
-                }
-            } catch (e) {
-                console.warn('Counter fetch error:', e);
-            }
+            } catch (e) {}
         }
 
         updateCounter();
-        setInterval(updateCounter, 8000);
+        setInterval(updateCounter, 6000);
     </script>
 </body>
 </html>

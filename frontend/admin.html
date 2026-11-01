@@ -3,402 +3,396 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم والإحصائيات — جامعة الفارابي</title>
+    <title>منظومة إدارة الحضور — جامعة الفارابي</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <style>
-        .admin-body {
-            background: #0B132B;
-            color: #F8FAFC;
-            min-height: 100vh;
-            padding: 30px 20px;
-            font-family: 'IBM Plex Sans Arabic', sans-serif;
-        }
-
-        .admin-container {
+        .admin-wrap {
             max-width: 1200px;
             margin: 0 auto;
+            width: 100%;
         }
 
-        .admin-header {
+        .admin-top-nav {
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
             gap: 20px;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--glass-border);
         }
 
-        .admin-title-area h1 {
-            font-size: 1.8rem;
-            color: #FFFFFF;
+        .admin-brand {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 16px;
         }
 
-        .admin-title-area p {
-            color: #94A3B8;
-            font-size: 0.95rem;
-            margin-top: 4px;
+        .admin-brand img {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: 1px solid var(--gold);
+        }
+
+        .admin-title-text h1 {
+            font-family: var(--font-heading);
+            font-size: 22px;
+            color: var(--ivory);
+            letter-spacing: -0.01em;
+        }
+
+        .admin-title-text p {
+            font-size: 13px;
+            color: var(--ivory-dim);
         }
 
         .admin-actions {
             display: flex;
-            gap: 12px;
+            gap: 10px;
             flex-wrap: wrap;
         }
 
-        .btn-action {
+        .btn-adm {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 0.9rem;
+            padding: 9px 18px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
             font-weight: 600;
             font-family: inherit;
             cursor: pointer;
             transition: all 0.2s ease;
-            border: none;
+            text-decoration: none;
         }
 
-        .btn-primary {
-            background: linear-gradient(135deg, #D4AF37 0%, #B89728 100%);
-            color: #0B132B;
+        .btn-adm--gold {
+            background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 100%);
+            color: var(--navy);
+            border: none;
+            box-shadow: 0 4px 15px rgba(201, 168, 76, 0.2);
         }
-        .btn-primary:hover {
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+
+        .btn-adm--gold:hover {
+            box-shadow: 0 6px 20px rgba(201, 168, 76, 0.35);
             transform: translateY(-1px);
         }
 
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.08);
-            color: #FFFFFF;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-        }
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.15);
+        .btn-adm--glass {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            color: var(--ivory);
         }
 
-        /* Stats Grid */
-        .stats-grid {
+        .btn-adm--glass:hover {
+            background: rgba(201, 168, 76, 0.1);
+            border-color: var(--gold);
+        }
+
+        /* Metric Tiles */
+        .metric-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
             gap: 20px;
-            margin-bottom: 30px;
+            margin-bottom: 28px;
         }
 
-        .stat-card {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 12px;
-            padding: 24px;
+        .metric-card {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            padding: 22px 24px;
             position: relative;
             overflow: hidden;
         }
 
-        .stat-card::after {
+        .metric-card::before {
             content: '';
             position: absolute;
-            top: 0;
-            right: 0;
-            width: 4px;
-            height: 100%;
+            top: 0; right: 0; width: 4px; height: 100%;
             background: var(--gold);
         }
 
-        .stat-card--crimson::after { background: var(--crimson); }
-        .stat-card--blue::after { background: #38BDF8; }
+        .metric-card--crimson::before { background: var(--crimson-bright); }
+        .metric-card--blue::before { background: #38bdf8; }
 
-        .stat-label {
-            font-size: 0.9rem;
-            color: #94A3B8;
-            margin-bottom: 8px;
+        .metric-label {
+            font-size: 13px;
+            color: var(--ivory-dim);
+            margin-bottom: 6px;
         }
 
-        .stat-value {
-            font-size: 2.2rem;
-            font-weight: 700;
-            color: #FFFFFF;
+        .metric-value {
+            font-family: var(--font-heading);
+            font-size: 34px;
+            font-weight: 800;
+            color: var(--ivory);
+            letter-spacing: -0.02em;
         }
 
-        /* Filter & Search Bar */
-        .controls-card {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 12px;
-            padding: 16px 20px;
-            margin-bottom: 24px;
+        /* Control Strip */
+        .filter-panel {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            padding: 14px 18px;
+            margin-bottom: 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 16px;
+            gap: 14px;
         }
 
-        .search-box {
-            position: relative;
+        .search-field {
             flex: 1;
-            min-width: 250px;
+            min-width: 260px;
+            position: relative;
         }
 
-        .search-input {
+        .search-field input {
             width: 100%;
-            padding: 10px 16px 10px 40px;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 8px;
-            color: #FFFFFF;
+            padding: 10px 16px;
+            background: var(--surface-input);
+            border: 1px solid var(--border-input);
+            border-radius: var(--radius-sm);
+            color: var(--ivory);
             font-family: inherit;
-            font-size: 0.95rem;
+            font-size: 14px;
         }
 
-        .search-input:focus {
+        .search-field input:focus {
             outline: none;
             border-color: var(--gold);
         }
 
-        .filter-tabs {
+        .tab-group {
             display: flex;
-            gap: 8px;
+            gap: 6px;
         }
 
-        .tab-btn {
+        .tab-item {
             background: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #94A3B8;
-            padding: 8px 16px;
+            border: 1px solid rgba(245, 240, 232, 0.1);
+            color: var(--ivory-dim);
+            padding: 7px 14px;
             border-radius: 6px;
-            font-size: 0.85rem;
+            font-size: 13px;
             cursor: pointer;
             font-family: inherit;
         }
 
-        .tab-btn.active {
-            background: rgba(212, 175, 55, 0.15);
-            color: var(--gold);
+        .tab-item.active {
+            background: rgba(201, 168, 76, 0.15);
+            color: var(--gold-light);
             border-color: var(--gold);
             font-weight: 600;
         }
 
-        /* Attendees Table */
-        .table-card {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 12px;
+        /* Registry Table */
+        .table-frame {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
             overflow: hidden;
         }
 
-        .table-responsive {
+        .table-scroll {
             width: 100%;
             overflow-x: auto;
         }
 
-        .data-table {
+        .reg-table {
             width: 100%;
             border-collapse: collapse;
             text-align: right;
-            font-size: 0.9rem;
+            font-size: 14px;
         }
 
-        .data-table th {
-            background: rgba(255, 255, 255, 0.04);
-            color: #94A3B8;
-            padding: 14px 18px;
+        .reg-table th {
+            background: rgba(5, 8, 43, 0.7);
+            color: var(--gold);
             font-weight: 600;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--glass-border);
             white-space: nowrap;
         }
 
-        .data-table td {
-            padding: 14px 18px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            color: #E2E8F0;
+        .reg-table td {
+            padding: 13px 18px;
+            border-bottom: 1px solid rgba(245, 240, 232, 0.05);
+            color: var(--ivory);
             white-space: nowrap;
         }
 
-        .data-table tr:hover {
-            background: rgba(255, 255, 255, 0.03);
+        .reg-table tr:hover td {
+            background: rgba(201, 168, 76, 0.04);
         }
 
-        .role-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.78rem;
+        .tag-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 100px;
+            font-size: 11px;
             font-weight: 600;
         }
 
-        .role-badge--volunteer {
-            background: rgba(212, 175, 55, 0.15);
-            color: #FCD34D;
-            border: 1px solid rgba(212, 175, 55, 0.4);
+        .tag-badge--vol {
+            background: rgba(201, 168, 76, 0.15);
+            color: var(--gold-light);
+            border: 1px solid var(--gold);
         }
 
-        .role-badge--attendee {
-            background: rgba(255, 255, 255, 0.08);
-            color: #CBD5E1;
+        .tag-badge--att {
+            background: rgba(245, 240, 232, 0.08);
+            color: var(--ivory-dim);
         }
 
-        .serial-tag {
-            font-family: monospace;
-            background: rgba(0, 0, 0, 0.4);
+        .ref-code {
+            font-family: var(--font-heading);
+            color: var(--gold-light);
+            background: rgba(201, 168, 76, 0.1);
             padding: 2px 8px;
             border-radius: 4px;
-            color: #38BDF8;
-            font-size: 0.85rem;
+            font-size: 12px;
         }
 
-        /* Modal */
-        .modal-overlay {
+        /* Import Modal */
+        .modal-wrap {
             position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(5px);
+            inset: 0;
+            background: rgba(2, 4, 15, 0.85);
+            backdrop-filter: blur(8px);
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
-            z-index: 1000;
+            z-index: 100;
             opacity: 0;
             pointer-events: none;
-            transition: all 0.2s ease;
+            transition: opacity 0.2s ease;
         }
 
-        .modal-overlay.open {
+        .modal-wrap.open {
             opacity: 1;
             pointer-events: auto;
         }
 
-        .modal-card {
-            background: #1C2541;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 14px;
-            max-width: 550px;
+        .modal-box {
+            background: var(--navy-mid);
+            border: 1px solid var(--gold);
+            border-radius: var(--radius-md);
+            max-width: 520px;
             width: 100%;
-            padding: 30px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            padding: 28px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
         }
 
-        .modal-title {
-            font-size: 1.3rem;
-            color: #FFFFFF;
-            margin-bottom: 12px;
+        .modal-box h3 {
+            font-family: var(--font-heading);
+            font-size: 18px;
+            color: var(--ivory);
+            margin-bottom: 8px;
         }
 
-        .modal-desc {
-            color: #94A3B8;
-            font-size: 0.88rem;
-            margin-bottom: 20px;
-            line-height: 1.6;
+        .modal-box p {
+            font-size: 13px;
+            color: var(--ivory-dim);
+            margin-bottom: 16px;
+            line-height: 1.5;
         }
 
-        .modal-textarea {
+        .modal-txt {
             width: 100%;
-            height: 160px;
-            background: #0B132B;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 8px;
-            color: #FFFFFF;
+            height: 150px;
+            background: var(--midnight);
+            border: 1px solid var(--border-input);
+            border-radius: var(--radius-sm);
+            color: var(--ivory);
             padding: 12px;
-            font-family: monospace;
-            font-size: 0.85rem;
+            font-family: inherit;
+            font-size: 13px;
             resize: vertical;
-            margin-bottom: 20px;
-            direction: ltr;
-            text-align: left;
+            margin-bottom: 18px;
         }
 
-        .modal-footer {
+        .modal-actions {
             display: flex;
             justify-content: flex-end;
-            gap: 12px;
+            gap: 10px;
         }
     </style>
 </head>
-<body class="admin-body">
+<body style="display: block; padding: 30px 20px;">
 
-    <div class="admin-container">
+    <div class="admin-wrap">
 
-        <!-- Top Header -->
-        <header class="admin-header">
-            <div class="admin-title-area">
-                <h1>
-                    <span>🏛️</span>
-                    <span>لوحة تحكم الحضور — جامعة الفارابي</span>
-                </h1>
-                <p id="event-name-sub">محاضرة علمية: AI Is Not As We Know It (أ.د. ضياء الجميلي)</p>
+        <header class="admin-top-nav">
+            <div class="admin-brand">
+                <img src="logo.jpg" alt="Al Farabi University Crest">
+                <div class="admin-title-text">
+                    <h1>منظومة إدارة الحضور</h1>
+                    <p>جامعة الفارابي • قسم هندسة الذكاء الاصطناعي</p>
+                </div>
             </div>
+
             <div class="admin-actions">
-                <button class="btn-action btn-secondary" id="btn-import-modal">
-                    <span>📥 استيراد المتطوعين</span>
-                </button>
-                <button class="btn-action btn-primary" id="btn-export-excel">
-                    <span>📊 تصدير البيانات (Excel/CSV)</span>
-                </button>
-                <button class="btn-action btn-secondary" id="btn-refresh">
-                    <span>🔄 تحديث</span>
-                </button>
-                <a href="display.html" target="_blank" class="btn-action btn-secondary">
-                    <span>🖥️ شاشة القاعة</span>
-                </a>
+                <button class="btn-adm btn-adm--glass" id="btnImportModal">استيراد فريق التنظيم</button>
+                <button class="btn-adm btn-adm--gold" id="btnExport">تصدير السجل (Excel)</button>
+                <button class="btn-adm btn-adm--glass" id="btnRefresh">تحديث</button>
+                <a href="display" target="_blank" class="btn-adm btn-adm--glass">شاشة القاعة</a>
             </div>
         </header>
 
-        <!-- Stats Grid -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-label">إجمالي المسجلين الحاضرين</div>
-                <div class="stat-value" id="stat-total">0</div>
+        <div class="metric-grid">
+            <div class="metric-card">
+                <div class="metric-label">إجمالي الحضور المسجل</div>
+                <div class="metric-value" id="valTotal">0</div>
             </div>
-            <div class="stat-card stat-card--crimson">
-                <div class="stat-label">المتطوعون والمميزون ⭐</div>
-                <div class="stat-value" id="stat-volunteers">0</div>
+            <div class="metric-card metric-card--crimson">
+                <div class="metric-label">فريق التنظيم والمعتمدين</div>
+                <div class="metric-value" id="valVolunteers">0</div>
             </div>
-            <div class="stat-card stat-card--blue">
-                <div class="stat-label">الضيوف والطلبة</div>
-                <div class="stat-value" id="stat-attendees">0</div>
-            </div>
-        </div>
-
-        <!-- Controls Card -->
-        <div class="controls-card">
-            <div class="search-box">
-                <input type="text" id="search-input" class="search-input" placeholder="بحث بالاسم، رقم الهاتف، أو جهة العمل...">
-            </div>
-            <div class="filter-tabs">
-                <button class="tab-btn active" data-filter="all">الكل (<span id="count-tab-all">0</span>)</button>
-                <button class="tab-btn" data-filter="volunteer">المتطوعون ⭐ (<span id="count-tab-vol">0</span>)</button>
-                <button class="tab-btn" data-filter="attendee">الضيوف (<span id="count-tab-att">0</span>)</button>
+            <div class="metric-card metric-card--blue">
+                <div class="metric-label">الضيوف والطلبة</div>
+                <div class="metric-value" id="valAttendees">0</div>
             </div>
         </div>
 
-        <!-- Attendees Table -->
-        <div class="table-card">
-            <div class="table-responsive">
-                <table class="data-table">
+        <div class="filter-panel">
+            <div class="search-field">
+                <input type="text" id="searchInput" placeholder="بحث بالاسم، رقم الهاتف، أو الكلية...">
+            </div>
+            <div class="tab-group">
+                <button class="tab-item active" data-filter="all">الكل (<span id="tabCountAll">0</span>)</button>
+                <button class="tab-item" data-filter="volunteer">فريق التنظيم (<span id="tabCountVol">0</span>)</button>
+                <button class="tab-item" data-filter="attendee">الضيوف (<span id="tabCountAtt">0</span>)</button>
+            </div>
+        </div>
+
+        <div class="table-frame">
+            <div class="table-scroll">
+                <table class="reg-table">
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>رقم القيد</th>
+                            <th>الرقم المرجعي</th>
                             <th>الاسم الكامل</th>
-                            <th>النوع</th>
-                            <th>المسمى / الدور</th>
-                            <th>جهة العمل / الكلية</th>
+                            <th>التصنيف</th>
+                            <th>المسمى أو الصفة</th>
+                            <th>الكلية أو جهة العمل</th>
                             <th>رقم الهاتف</th>
-                            <th>وقت تسجيل الحضور</th>
+                            <th>وقت التسجيل</th>
                         </tr>
                     </thead>
-                    <tbody id="table-body">
+                    <tbody id="tableRows">
                         <tr>
-                            <td colspan="8" style="text-align: center; padding: 40px; color: #94A3B8;">جارٍ تحميل سجلات الحضور...</td>
+                            <td colspan="8" style="text-align: center; padding: 36px; color: var(--ivory-dim);">جارٍ استرجاع قيود الحضور...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -407,18 +401,15 @@
 
     </div>
 
-    <!-- Import Volunteers Modal -->
-    <div class="modal-overlay" id="import-modal">
-        <div class="modal-card">
-            <h3 class="modal-title">استيراد قائمة المتطوعين</h3>
-            <p class="modal-desc">
-                أدخل بيانات المتطوعين لتمييزهم تلقائياً بشارة ذهبية في الحضور.
-                صيغة كل سطر: <code>الاسم, رقم الهاتف, المسمى/الدور</code>
-            </p>
-            <textarea id="import-textarea" class="modal-textarea" placeholder="علي حسن, 07701234567, منسق قاعة بابل&#10;مريم أحمد, 07801234567, مسؤولة الاستقبال"></textarea>
-            <div class="modal-footer">
-                <button class="btn-action btn-secondary" id="btn-cancel-modal">إلغاء</button>
-                <button class="btn-action btn-primary" id="btn-submit-import">حفظ وتطبيق</button>
+    <!-- Import Modal -->
+    <div class="modal-wrap" id="importModal">
+        <div class="modal-box">
+            <h3>استيراد أسماء فريق التنظيم</h3>
+            <p>أدخل بيانات المنظمين لتمييزهم تلقائياً في السجل. التنسيق: الاسم، رقم الهاتف، المسمى في كل سطر.</p>
+            <textarea class="modal-txt" id="importText" placeholder="علي حسن, 07701234567, منسق قاعة بابل&#10;مريم أحمد, 07801234567, مسؤولة الاستقبال"></textarea>
+            <div class="modal-actions">
+                <button class="btn-adm btn-adm--glass" id="btnCancelModal">إلغاء</button>
+                <button class="btn-adm btn-adm--gold" id="btnSubmitImport">حفظ واعتماد</button>
             </div>
         </div>
     </div>
@@ -428,24 +419,18 @@
         const SUPABASE_ANON = window.SUPABASE_ANON || 'YOUR_ANON_KEY';
         const EVENT_SLUG = new URLSearchParams(window.location.search).get('event') || 'ai-lecture-2026';
 
-        let allData = [];
-        let currentFilter = 'all';
+        let dataRows = [];
+        let activeFilter = 'all';
 
-        // 1. Fetch Data
-        async function loadData() {
+        async function loadRecords() {
             try {
-                // If local test server mode
                 if (!SUPABASE_URL || SUPABASE_URL.includes('YOUR_PROJECT')) {
-                    const res = await fetch(`/api/events/${EVENT_SLUG}`);
-                    if (res.ok) {
-                        const json = await res.json();
-                        // Build table from server event
-                        renderMockOrData(json);
-                        return;
-                    }
+                    const localData = JSON.parse(localStorage.getItem('alfarabi_admin_attendees_' + EVENT_SLUG) || '[]');
+                    dataRows = localData;
+                    render();
+                    return;
                 }
 
-                // Call Supabase RPC get_admin_dashboard
                 const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_admin_dashboard`, {
                     method: 'POST',
                     headers: {
@@ -457,166 +442,138 @@
                 });
 
                 if (res.ok) {
-                    const data = await res.json();
-                    allData = data.attendees || [];
+                    const result = await res.json();
+                    dataRows = result.attendees || [];
                     render();
                 }
             } catch (err) {
-                console.warn('Load data error:', err);
+                console.warn('Error loading records:', err);
             }
         }
 
-        function renderMockOrData(json) {
-            // Check localStorage cached attendees
-            const localAttendees = JSON.parse(localStorage.getItem('alfarabi_admin_attendees_' + EVENT_SLUG) || '[]');
-            allData = localAttendees;
-            render();
-        }
-
-        // 2. Render Table and Counters
         function render() {
-            const tbody = document.getElementById('table-body');
-            const search = document.getElementById('search-input').value.trim().toLowerCase();
+            const tbody = document.getElementById('tableRows');
+            const query = document.getElementById('searchInput').value.trim().toLowerCase();
 
-            const volunteersCount = allData.filter(d => d.kind === 'volunteer').length;
-            const attendeesCount = allData.length - volunteersCount;
+            const volCount = dataRows.filter(r => r.kind === 'volunteer').length;
+            const attCount = dataRows.length - volCount;
 
-            document.getElementById('stat-total').textContent = allData.length;
-            document.getElementById('stat-volunteers').textContent = volunteersCount;
-            document.getElementById('stat-attendees').textContent = attendeesCount;
+            document.getElementById('valTotal').textContent = dataRows.length;
+            document.getElementById('valVolunteers').textContent = volCount;
+            document.getElementById('valAttendees').textContent = attCount;
 
-            document.getElementById('count-tab-all').textContent = allData.length;
-            document.getElementById('count-tab-vol').textContent = volunteersCount;
-            document.getElementById('count-tab-att').textContent = attendeesCount;
+            document.getElementById('tabCountAll').textContent = dataRows.length;
+            document.getElementById('tabCountVol').textContent = volCount;
+            document.getElementById('tabCountAtt').textContent = attCount;
 
-            const filtered = allData.filter(item => {
-                if (currentFilter === 'volunteer' && item.kind !== 'volunteer') return false;
-                if (currentFilter === 'attendee' && item.kind === 'volunteer') return false;
-                if (!search) return true;
+            const filtered = dataRows.filter(row => {
+                if (activeFilter === 'volunteer' && row.kind !== 'volunteer') return false;
+                if (activeFilter === 'attendee' && row.kind === 'volunteer') return false;
+                if (!query) return true;
                 return (
-                    (item.full_name && item.full_name.toLowerCase().includes(search)) ||
-                    (item.phone && item.phone.includes(search)) ||
-                    (item.workplace && item.workplace.toLowerCase().includes(search)) ||
-                    (item.role_title && item.role_title.toLowerCase().includes(search)) ||
-                    (item.serial && item.serial.toLowerCase().includes(search))
+                    (row.full_name && row.full_name.toLowerCase().includes(query)) ||
+                    (row.phone && row.phone.includes(query)) ||
+                    (row.workplace && row.workplace.toLowerCase().includes(query)) ||
+                    (row.role_title && row.role_title.toLowerCase().includes(query)) ||
+                    (row.serial && row.serial.toLowerCase().includes(query))
                 );
             });
 
             if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 40px; color: #94A3B8;">لا توجد سجلات مطابقة للبحث</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 36px; color: var(--ivory-dim);">لا توجد قيود مطابقة</td></tr>`;
                 return;
             }
 
             tbody.innerHTML = filtered.map((row, idx) => {
                 const isVol = row.kind === 'volunteer';
-                const timeStr = row.created_at ? new Date(row.created_at).toLocaleTimeString('ar-IQ', { hour: '2-digit', minute: '2-digit' }) : '—';
+                const timeText = row.created_at ? new Date(row.created_at).toLocaleTimeString('ar-IQ', { hour: '2-digit', minute: '2-digit' }) : '—';
                 return `
                     <tr>
-                        <td style="color: #64748B;">${idx + 1}</td>
-                        <td><span class="serial-tag">${row.serial || ('ALF-' + String(idx + 1).padStart(4, '0'))}</span></td>
+                        <td style="color: rgba(245, 240, 232, 0.4);">${idx + 1}</td>
+                        <td><span class="ref-code">${row.serial || ('ALF-' + String(idx + 1).padStart(4, '0'))}</span></td>
                         <td><strong>${escapeHtml(row.full_name)}</strong></td>
                         <td>
-                            <span class="role-badge ${isVol ? 'role-badge--volunteer' : 'role-badge--attendee'}">
-                                ${isVol ? '⭐ متطوع تنظيم' : 'حاضر'}
+                            <span class="tag-badge ${isVol ? 'tag-badge--vol' : 'tag-badge--att'}">
+                                ${isVol ? 'فريق التنظيم' : 'حاضر'}
                             </span>
                         </td>
                         <td>${escapeHtml(row.role_title || '—')}</td>
                         <td>${escapeHtml(row.workplace || '—')}</td>
                         <td dir="ltr" style="text-align: right;">${escapeHtml(row.phone || '—')}</td>
-                        <td>${timeStr}</td>
+                        <td>${timeText}</td>
                     </tr>
                 `;
             }).join('');
         }
 
-        // 3. Export to Excel / CSV with UTF-8 BOM
-        function exportExcel() {
-            if (allData.length === 0) {
-                alert('لا توجد بيانات حضور لتصديرها حالياً');
+        function exportToExcel() {
+            if (dataRows.length === 0) {
+                alert('لا توجد بيانات حضور لتصديرها');
                 return;
             }
 
-            const headers = ['رقم القيد', 'الاسم الكامل', 'الصفة', 'المسمى الوظيفي', 'مكان العمل/الكلية', 'رقم الهاتف', 'وقت التسجيل'];
-            const rows = allData.map(d => [
+            const headers = ['الرقم المرجعي', 'الاسم الكامل', 'التصنيف', 'المسمى الوظيفي', 'الكلية أو جهة العمل', 'رقم الهاتف', 'وقت التسجيل'];
+            const lines = dataRows.map(d => [
                 `"${d.serial || ''}"`,
                 `"${(d.full_name || '').replace(/"/g, '""')}"`,
-                `"${d.kind === 'volunteer' ? 'متطوع' : 'حاضر'}"`,
+                `"${d.kind === 'volunteer' ? 'فريق التنظيم' : 'حاضر'}"`,
                 `"${(d.role_title || '').replace(/"/g, '""')}"`,
                 `"${(d.workplace || '').replace(/"/g, '""')}"`,
-                `"\t${d.phone || ''}"`, // \t prevents Excel from formatting phone number as scientific notation
+                `"\t${d.phone || ''}"`,
                 `"${d.created_at ? new Date(d.created_at).toLocaleString('ar-IQ') : ''}"`
             ]);
 
-            const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `حضور_محاضرة_الذكاء_الاصطناعي_الفارابي_${new Date().toISOString().slice(0, 10)}.csv`;
-            link.click();
+            const csvData = '\uFEFF' + [headers.join(','), ...lines.map(r => r.join(','))].join('\r\n');
+            const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `سجل_حضور_محاضرة_الذكاء_الاصطناعي_الفارابي_${new Date().toISOString().slice(0, 10)}.csv`;
+            a.click();
         }
 
-        // 4. Import Volunteers
-        async function submitImport() {
-            const rawText = document.getElementById('import-textarea').value.trim();
-            if (!rawText) return;
+        async function submitVolunteers() {
+            const raw = document.getElementById('importText').value.trim();
+            if (!raw) return;
 
-            const lines = rawText.split('\n');
-            const volunteersList = [];
+            const lines = raw.split('\n');
+            const volunteers = [];
 
             for (const line of lines) {
                 const parts = line.split(/[,،]/).map(s => s.trim());
                 if (parts.length >= 2) {
-                    volunteersList.push({
+                    volunteers.push({
                         full_name: parts[0],
                         phone: parts[1],
-                        role_title: parts[2] || 'متطوع تنظيم'
+                        role_title: parts[2] || 'فريق التنظيم'
                     });
                 }
             }
 
-            if (volunteersList.length === 0) {
-                alert('يرجى التأكد من كتابة الاسم ورقم الهاتف على الأقل في كل سطر');
+            if (volunteers.length === 0) {
+                alert('يرجى كتابة الاسم ورقم الهاتف في كل سطر');
                 return;
             }
 
-            // Save in localStorage for instant mock reactivity
-            const savedVols = JSON.parse(localStorage.getItem('alfarabi_volunteers_' + EVENT_SLUG) || '[]');
-            const updatedVols = [...savedVols, ...volunteersList];
-            localStorage.setItem('alfarabi_volunteers_' + EVENT_SLUG, JSON.stringify(updatedVols));
-
-            // Retroactively update allData
-            allData.forEach(item => {
-                const match = updatedVols.find(v => v.phone === item.phone || (v.full_name && item.full_name && item.full_name.includes(v.full_name)));
+            dataRows.forEach(row => {
+                const match = volunteers.find(v => v.phone === row.phone || (v.full_name && row.full_name && row.full_name.includes(v.full_name)));
                 if (match) {
-                    item.kind = 'volunteer';
-                    if (match.role_title) item.role_title = match.role_title;
+                    row.kind = 'volunteer';
+                    if (match.role_title) row.role_title = match.role_title;
                 }
             });
 
-            // Send to Supabase RPC if configured
-            if (SUPABASE_URL && !SUPABASE_URL.includes('YOUR_PROJECT')) {
-                try {
-                    await fetch(`${SUPABASE_URL}/rest/v1/rpc/import_volunteers_list`, {
-                        method: 'POST',
-                        headers: {
-                            'apikey': SUPABASE_ANON,
-                            'Authorization': `Bearer ${SUPABASE_ANON}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            p_event_slug: EVENT_SLUG,
-                            p_volunteers: volunteersList
-                        })
-                    });
-                } catch (e) {
-                    console.warn('RPC import failed:', e);
-                }
-            }
+            const saved = JSON.parse(localStorage.getItem('alfarabi_admin_attendees_' + EVENT_SLUG) || '[]');
+            saved.forEach(row => {
+                const match = volunteers.find(v => v.phone === row.phone);
+                if (match) row.kind = 'volunteer';
+            });
+            localStorage.setItem('alfarabi_admin_attendees_' + EVENT_SLUG, JSON.stringify(saved));
 
-            document.getElementById('import-modal').classList.remove('open');
-            document.getElementById('import-textarea').value = '';
+            document.getElementById('importModal').classList.remove('open');
+            document.getElementById('importText').value = '';
             render();
-            alert(`تم استيراد ${volunteersList.length} متطوع وتمييزهم بنجاح! ⭐`);
+            alert(`تم اعتماد ${volunteers.length} عضواً في فريق التنظيم بنجاح.`);
         }
 
         function escapeHtml(str) {
@@ -626,33 +583,29 @@
             return d.innerHTML;
         }
 
-        // Setup Events
-        document.getElementById('btn-export-excel').addEventListener('click', exportExcel);
-        document.getElementById('btn-refresh').addEventListener('click', loadData);
-        document.getElementById('search-input').addEventListener('input', render);
+        document.getElementById('btnExport').addEventListener('click', exportToExcel);
+        document.getElementById('btnRefresh').addEventListener('click', loadRecords);
+        document.getElementById('searchInput').addEventListener('input', render);
 
-        document.querySelectorAll('.tab-btn').forEach(btn => {
+        document.querySelectorAll('.tab-item').forEach(btn => {
             btn.addEventListener('click', () => {
-                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-item').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                currentFilter = btn.dataset.filter;
+                activeFilter = btn.dataset.filter;
                 render();
             });
         });
 
-        // Modal triggers
-        document.getElementById('btn-import-modal').addEventListener('click', () => {
-            document.getElementById('import-modal').classList.add('open');
+        document.getElementById('btnImportModal').addEventListener('click', () => {
+            document.getElementById('importModal').classList.add('open');
         });
-        document.getElementById('btn-cancel-modal').addEventListener('click', () => {
-            document.getElementById('import-modal').classList.remove('open');
+        document.getElementById('btnCancelModal').addEventListener('click', () => {
+            document.getElementById('importModal').classList.remove('open');
         });
-        document.getElementById('btn-submit-import').addEventListener('click', submitImport);
+        document.getElementById('btnSubmitImport').addEventListener('click', submitVolunteers);
 
-        // Auto poll every 10s
-        loadData();
-        setInterval(loadData, 10000);
+        loadRecords();
+        setInterval(loadRecords, 8000);
     </script>
 </body>
 </html>
-
