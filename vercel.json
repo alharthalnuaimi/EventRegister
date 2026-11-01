@@ -11,6 +11,11 @@
     { "source": "/dashboard/", "destination": "/frontend/admin.html" },
     { "source": "/panel", "destination": "/frontend/admin.html" },
     { "source": "/panel/", "destination": "/frontend/admin.html" },
+    { "source": "/admin/style.css", "destination": "/frontend/style.css" },
+    { "source": "/admin/logo.jpg", "destination": "/frontend/logo.jpg" },
+    { "source": "/admin/app.js", "destination": "/frontend/app.js" },
+    { "source": "/display/style.css", "destination": "/frontend/style.css" },
+    { "source": "/display/logo.jpg", "destination": "/frontend/logo.jpg" },
     { "source": "/(.*)", "destination": "/frontend/$1" }
   ]
 }

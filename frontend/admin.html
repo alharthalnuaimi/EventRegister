@@ -7,8 +7,36 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="/style.css">
     <style>
+        :root {
+            --midnight: #02040f;
+            --navy: #05082b;
+            --navy-mid: #0d1245;
+            --crimson: #8b0000;
+            --crimson-bright: #c0002a;
+            --gold: #c9a84c;
+            --gold-light: #e8c97a;
+            --gold-glow: rgba(201, 168, 76, 0.25);
+            --ivory: #f5f0e8;
+            --ivory-dim: rgba(245, 240, 232, 0.65);
+            --glass: rgba(13, 18, 69, 0.55);
+            --glass-border: rgba(201, 168, 76, 0.22);
+            --radius-sm: 8px;
+            --radius-md: 14px;
+            --font-heading: 'Syne', 'IBM Plex Sans Arabic', sans-serif;
+            --font-body: 'IBM Plex Sans Arabic', sans-serif;
+        }
+
+        body {
+            background-color: var(--midnight) !important;
+            color: var(--ivory) !important;
+            font-family: var(--font-body);
+            min-height: 100vh;
+            margin: 0;
+            padding: 30px 20px;
+        }
+
         .admin-wrap {
             max-width: 1200px;
             margin: 0 auto;
@@ -328,13 +356,13 @@
         }
     </style>
 </head>
-<body style="display: block; padding: 30px 20px;">
+<body>
 
     <div class="admin-wrap">
 
         <header class="admin-top-nav">
             <div class="admin-brand">
-                <img src="logo.jpg" alt="Al Farabi University Crest">
+                <img src="/logo.jpg" alt="Al Farabi University Crest">
                 <div class="admin-title-text">
                     <h1>منظومة إدارة الحضور</h1>
                     <p>جامعة الفارابي • قسم هندسة الذكاء الاصطناعي</p>
@@ -345,7 +373,7 @@
                 <button class="btn-adm btn-adm--glass" id="btnImportModal">استيراد فريق التنظيم</button>
                 <button class="btn-adm btn-adm--gold" id="btnExport">تصدير السجل (Excel)</button>
                 <button class="btn-adm btn-adm--glass" id="btnRefresh">تحديث</button>
-                <a href="display" target="_blank" class="btn-adm btn-adm--glass">شاشة القاعة</a>
+                <a href="/display" target="_blank" class="btn-adm btn-adm--glass">شاشة القاعة</a>
             </div>
         </header>
 
