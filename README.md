@@ -19,10 +19,10 @@ event-register/
 ## التهيئة
 
 ### 1. Supabase
-عدّل القيم في `app.js` و `display.html`:
+عدّل القيم في `frontend/config.js` (المفتاح العام فقط، ولا يوضع مفتاح الخدمة service key هنا أبداً):
 ```js
-const SUPABASE_URL  = 'https://YOUR_PROJECT.supabase.co';
-const SUPABASE_ANON = 'YOUR_ANON_KEY';
+window.SUPABASE_URL  = 'https://YOUR_PROJECT.supabase.co';
+window.SUPABASE_ANON = 'YOUR_ANON_KEY';
 ```
 
 ### 2. رقم واتساب

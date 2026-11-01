@@ -4,7 +4,10 @@
   "description": "500+ Concurrent user load simulation test for Al-Farabi event registration tool",
   "main": "load_test_500.js",
   "scripts": {
-    "test:500": "node load_test_500.js"
+    "test:500": "node load_test_500.js",
+    "test:db": "node check_migrations.mjs"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.14"
   }
 }
-
