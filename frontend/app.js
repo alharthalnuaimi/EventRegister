@@ -30,7 +30,7 @@ async function fetchWithRetry(url, options = {}, retries = 3, backoffMs = 600) {
 }
 
 /* ============================================================
-   Phone Normalization (E.164 Iraqi & International)
+   Phone Normalization (E.164 Iraqi)
    ============================================================ */
 function normalizePhone(raw) {
     if (!raw) return '';
@@ -65,8 +65,7 @@ const validators = {
         if (!val) return currentLang === 'ar' ? 'يرجى إدخال رقم الهاتف' : 'Phone number is required';
         const norm = normalizePhone(val);
         const iraqiPhone = /^\+9647\d{9}$/;
-        const generalPhone = /^\+\d{8,15}$/;
-        if (!iraqiPhone.test(norm) && !generalPhone.test(norm)) {
+        if (!iraqiPhone.test(norm)) {
             return currentLang === 'ar' ? 'صيغة رقم غير صحيحة (07XXXXXXXX)' : 'Invalid phone number format';
         }
         return null;
@@ -238,7 +237,6 @@ async function registerAttendance(formData) {
         method: 'POST',
         headers: {
             'apikey': SUPABASE_ANON,
-            'Authorization': `Bearer ${SUPABASE_ANON}`,
             'Content-Type': 'application/json'
         },
         body: JSON.stringify(rpcPayload)

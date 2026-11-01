@@ -22,3 +22,4 @@ package-lock.json
 *.pdf
 bot/output/
 bot/sample_cert.pdf
+graphify-out/
