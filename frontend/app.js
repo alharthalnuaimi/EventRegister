@@ -1,7 +1,7 @@
 /**
- * أداة تسجيل الفعاليات — Event Attendance Tool v2
- * Alfarabi University · High-Concurrency Attendance & Pass Generation
- * ──────────────────────────────────────────────────────────────────
+ * أداة تسجيل الفعاليات — Event Attendance Tool v3
+ * Alfarabi University · Streamlined Attendance (Phone-Only Deduplication)
+ * ──────────────────────────────────────────────────────────────────────
  */
 
 const SUPABASE_URL  = window.SUPABASE_URL || 'https://YOUR_PROJECT.supabase.co';
@@ -59,7 +59,7 @@ const supabase = {
 };
 
 /* ============================================================
-   تطبيع البيانات — Normalization
+   تطبيع رقم الهاتف — Phone Normalization
    ============================================================ */
 function normalizePhone(raw) {
     if (!raw) return '';
@@ -78,12 +78,8 @@ function normalizePhone(raw) {
     return digits;
 }
 
-function normalizeEmail(raw) {
-    return String(raw || '').trim().toLowerCase();
-}
-
 /* ============================================================
-   التحقق من صحة المدخلات — Form Validation
+   التحقق من صحة المدخلات — Form Validation (No Email)
    ============================================================ */
 const validators = {
     fullname(val) {
@@ -102,14 +98,6 @@ const validators = {
         if (!iraqiPhoneRegex.test(norm) && !generalPhoneRegex.test(norm)) {
             return currentLang === 'ar' ? 'رقم هاتف غير صحيح (مثال: 07XXXXXXXX)' : 'Invalid phone (e.g. 07XXXXXXXX)';
         }
-        return null;
-    },
-
-    email(val) {
-        val = (val || '').trim();
-        if (!val) return currentLang === 'ar' ? 'البريد الإلكتروني مطلوب' : 'Email is required';
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(val)) return currentLang === 'ar' ? 'صيغة بريد غير صحيحة' : 'Invalid email';
         return null;
     },
 
@@ -157,7 +145,7 @@ function validateField(fieldId) {
 }
 
 function validateAll() {
-    const fields = ['fullname', 'phone', 'email', 'role', 'workplace', 'consent'];
+    const fields = ['fullname', 'phone', 'role', 'workplace', 'consent'];
     let allValid = true;
     for (const f of fields) {
         if (!validateField(f)) allValid = false;
@@ -177,13 +165,12 @@ function saveTicket(ticket) {
             localStorage.setItem(ALL_TICKETS_KEY, JSON.stringify(all));
         }
 
-        // Also add to admin mock store in localStorage for local testing
+        // Add to admin mock store for instant reactivity
         const adminList = JSON.parse(localStorage.getItem('alfarabi_admin_attendees_' + EVENT_SLUG) || '[]');
         if (!adminList.some(a => a.phone === ticket.phone || a.serial === ticket.serial)) {
             adminList.unshift({
                 full_name: ticket.full_name,
                 phone: ticket.phone,
-                email: ticket.email,
                 role_title: ticket.role,
                 workplace: ticket.workplace,
                 kind: ticket.kind,
@@ -205,44 +192,35 @@ function getSavedTicket() {
 }
 
 /* ============================================================
-   عرض بطاقة الحضور — Render Attendee Pass
+   عرض تأكيد الحضور — Render Attendance Confirmation
    ============================================================ */
-function renderPass(data) {
+function renderConfirmation(data) {
     document.getElementById('register-form').style.display = 'none';
-    const screen = document.getElementById('screen-pass');
+    const screen = document.getElementById('screen-confirmed');
     screen.hidden = false;
     screen.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-    document.getElementById('pass-name').textContent = data.full_name || '—';
-    document.getElementById('pass-role').textContent = data.role || '—';
-    document.getElementById('pass-workplace').textContent = data.workplace || '—';
-    document.getElementById('pass-serial').textContent = data.serial || 'ALF-2026-000000';
+    document.getElementById('conf-name').textContent = data.full_name || '—';
+    document.getElementById('conf-role').textContent = data.role || '—';
+    document.getElementById('conf-workplace').textContent = data.workplace || '—';
+    document.getElementById('conf-serial').textContent = data.serial || 'ALF-2026-000000';
 
-    const badgeEl = document.getElementById('pass-type-badge');
+    const badgeEl = document.getElementById('confirmed-badge');
     if (data.kind === 'volunteer') {
         badgeEl.textContent = '⭐ متطوع تنظيم معتمد';
-        badgeEl.className = 'pass-type-badge pass-type-badge--volunteer';
+        badgeEl.className = 'confirmed-badge confirmed-badge--volunteer';
+    } else if (data.already_registered) {
+        badgeEl.textContent = 'تم تسجيل حضورك مسبقاً';
+        badgeEl.className = 'confirmed-badge confirmed-badge--already';
     } else {
-        badgeEl.textContent = 'بطاقة حضور رسمية';
-        badgeEl.className = 'pass-type-badge pass-type-badge--attendee';
-    }
-
-    // Render verification QR Code on Pass
-    const qrCanvas = document.getElementById('pass-qr-canvas');
-    if (qrCanvas && window.QRCode) {
-        QRCode.toCanvas(qrCanvas, `ALFARABI:${data.serial}:${data.full_name}`, {
-            width: 90,
-            margin: 1,
-            color: { dark: '#0B132B', light: '#FFFFFF' }
-        }, function (err) {
-            if (err) console.error('Pass QR error:', err);
-        });
+        badgeEl.textContent = 'تم تأكيد الحضور رسمياً';
+        badgeEl.className = 'confirmed-badge confirmed-badge--attendee';
     }
 }
 
 function showForm() {
     document.getElementById('register-form').style.display = '';
-    document.getElementById('screen-pass').hidden = true;
+    document.getElementById('screen-confirmed').hidden = true;
     document.getElementById('screen-error').hidden = true;
 
     const btn = document.getElementById('submit-btn');
@@ -251,11 +229,10 @@ function showForm() {
 }
 
 /* ============================================================
-   إرسال التسجيل — Submit Attendance
+   إرسال تأكيد الحضور — Submit Attendance
    ============================================================ */
 async function register(formData) {
     const phone_norm = normalizePhone(formData.phone);
-    const email_norm = normalizeEmail(formData.email);
 
     // 0. Local API server fallback
     if (!SUPABASE_URL || SUPABASE_URL.includes('YOUR_PROJECT')) {
@@ -265,7 +242,7 @@ async function register(formData) {
             body: JSON.stringify({
                 full_name: formData.fullname.trim(),
                 phone: formData.phone,
-                email: formData.email,
+                email: '',
                 role_title: formData.role.trim(),
                 workplace: formData.workplace.trim(),
                 lang: currentLang
@@ -282,7 +259,6 @@ async function register(formData) {
             serial: result.serial,
             full_name: formData.fullname,
             phone: formData.phone,
-            email: formData.email,
             role: formData.role,
             workplace: formData.workplace
         };
@@ -293,7 +269,7 @@ async function register(formData) {
         p_event_slug: EVENT_SLUG,
         p_full_name: formData.fullname.trim(),
         p_phone_norm: phone_norm,
-        p_email_norm: email_norm,
+        p_email_norm: '',
         p_role_title: formData.role.trim(),
         p_workplace: formData.workplace.trim(),
         p_lang: currentLang
@@ -311,7 +287,6 @@ async function register(formData) {
         serial: result.serial,
         full_name: formData.fullname,
         phone: formData.phone,
-        email: formData.email,
         role: formData.role,
         workplace: formData.workplace
     };
@@ -335,7 +310,6 @@ async function handleSubmit(e) {
     const formData = {
         fullname:  document.getElementById('fullname').value,
         phone:     document.getElementById('phone').value,
-        email:     document.getElementById('email').value,
         role:      document.getElementById('role').value,
         workplace: document.getElementById('workplace').value
     };
@@ -343,7 +317,7 @@ async function handleSubmit(e) {
     try {
         const result = await register(formData);
         saveTicket(result);
-        renderPass(result);
+        renderConfirmation(result);
     } catch (err) {
         console.error('Registration failed:', err);
         document.getElementById('error-message').textContent = err.message || 'حدث خطأ في الاتصال. يرجى المحاولة مرة أخرى.';
@@ -363,7 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('retry-btn')?.addEventListener('click', showForm);
     document.getElementById('btn-register-another')?.addEventListener('click', showForm);
 
-    ['fullname', 'phone', 'email', 'role', 'workplace'].forEach(id => {
+    ['fullname', 'phone', 'role', 'workplace'].forEach(id => {
         const input = document.getElementById(id);
         if (!input) return;
         input.addEventListener('blur', () => validateField(id));
@@ -376,6 +350,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Check if user already registered on this device
     const saved = getSavedTicket();
     if (saved && saved.full_name) {
-        renderPass(saved);
+        renderConfirmation(saved);
     }
 });

@@ -30,13 +30,13 @@ DECLARE
 BEGIN
     -- Input sanitization
     v_clean_phone := trim(p_phone_norm);
-    v_clean_email := lower(trim(p_email_norm));
+    v_clean_email := lower(trim(COALESCE(p_email_norm, '')));
 
-    IF v_clean_phone = '' OR v_clean_email = '' OR trim(p_full_name) = '' THEN
+    IF v_clean_phone = '' OR trim(p_full_name) = '' THEN
         RETURN jsonb_build_object(
             'success', false,
             'error_code', 'INVALID_INPUT',
-            'message', 'جميع الحقول الأساسية مطلوبة / All basic fields are required'
+            'message', 'الاسم الكامل ورقم الهاتف مطلوبان / Full name and phone are required'
         );
     END IF;
 
@@ -63,12 +63,12 @@ BEGIN
         );
     END IF;
 
-    -- 2. Check if already registered (Phone or Email unique per event)
+    -- 2. Check if already registered (Strictly Unique Phone per event)
     SELECT id, kind, role_title, workplace, full_name
     INTO v_reg_id, v_reg_kind, v_matched_role, p_workplace, p_full_name
     FROM registrations
     WHERE event_id = v_event.id
-      AND (phone_norm = v_clean_phone OR email_norm = v_clean_email)
+      AND phone_norm = v_clean_phone
     LIMIT 1;
 
     IF FOUND THEN
@@ -85,12 +85,12 @@ BEGIN
         );
     END IF;
 
-    -- 3. Check for volunteer match (Matched by normalized phone or email)
+    -- 3. Check for volunteer match (Matched by normalized phone)
     SELECT id, role_title
     INTO v_volunteer_id, v_matched_role
     FROM volunteers
     WHERE event_id = v_event.id
-      AND (phone_norm = v_clean_phone OR email_norm = v_clean_email)
+      AND phone_norm = v_clean_phone
     LIMIT 1;
 
     IF FOUND THEN

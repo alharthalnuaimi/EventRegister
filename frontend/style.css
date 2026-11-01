@@ -563,3 +563,149 @@ body {
         color: #000000 !important;
     }
 }
+
+
+/* ============================================================
+   بطاقة تأكيد الحضور — Attendance Confirmed Card
+   ============================================================ */
+.confirmed-card {
+    background: rgba(20, 29, 56, 0.85);
+    border: 1.5px solid rgba(212, 175, 55, 0.4);
+    border-radius: var(--radius-lg);
+    padding: 36px 24px;
+    text-align: center;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5), 0 0 30px rgba(212, 175, 55, 0.2);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    margin-bottom: 24px;
+    animation: scale-up 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes scale-up {
+    from { opacity: 0; transform: scale(0.95); }
+    to   { opacity: 1; transform: scale(1); }
+}
+
+.confirmed-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 16px;
+    border-radius: 50%;
+    background: rgba(16, 185, 129, 0.15);
+    border: 2px solid #10B981;
+    color: #10B981;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 25px rgba(16, 185, 129, 0.3);
+}
+
+.confirmed-icon svg {
+    width: 34px;
+    height: 34px;
+}
+
+.confirmed-badge {
+    display: inline-block;
+    padding: 5px 16px;
+    border-radius: var(--radius-full);
+    font-size: 0.82rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+.confirmed-badge--attendee {
+    background: rgba(56, 189, 248, 0.15);
+    color: #38BDF8;
+    border: 1px solid rgba(56, 189, 248, 0.4);
+}
+
+.confirmed-badge--volunteer {
+    background: rgba(212, 175, 55, 0.2);
+    color: #FCD34D;
+    border: 1px solid var(--gold);
+    box-shadow: 0 0 12px rgba(212, 175, 55, 0.3);
+}
+
+.confirmed-badge--already {
+    background: rgba(245, 158, 11, 0.2);
+    color: #FBBF24;
+    border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.confirmed-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 6px;
+}
+
+.confirmed-sub {
+    font-size: 0.9rem;
+    color: var(--gray-400);
+    margin-bottom: 24px;
+}
+
+.confirmed-details {
+    background: rgba(6, 11, 24, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    text-align: right;
+    margin-bottom: 24px;
+}
+
+[dir="ltr"] .confirmed-details {
+    text-align: left;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    font-size: 0.92rem;
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    color: var(--gray-400);
+    font-weight: 500;
+}
+
+.detail-value {
+    color: var(--white);
+    font-weight: 600;
+}
+
+.serial-code {
+    font-family: monospace;
+    color: var(--gold-light) !important;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.05em;
+}
+
+.btn-another {
+    width: 100%;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1.5px solid rgba(255, 255, 255, 0.15);
+    color: var(--gray-300);
+    border-radius: var(--radius-md);
+    font-size: 0.92rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s ease;
+}
+
+.btn-another:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: var(--white);
+}

@@ -62,9 +62,9 @@ class AtomicRegistrationEngine {
             return { success: false, error: 'EVENT_CLOSED' };
         }
 
-        // Check deduplication in B-Tree index map (O(1) in memory, O(log N) in PostgreSQL)
-        if (this.phoneIndex.has(phone_norm) || this.emailIndex.has(email_norm)) {
-            const existingId = this.phoneIndex.get(phone_norm) || this.emailIndex.get(email_norm);
+        // Check deduplication in B-Tree index map (strictly on phone)
+        if (this.phoneIndex.has(phone_norm)) {
+            const existingId = this.phoneIndex.get(phone_norm);
             return {
                 success: true,
                 already_registered: true,

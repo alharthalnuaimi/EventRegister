@@ -393,13 +393,12 @@
                             <th>المسمى / الدور</th>
                             <th>جهة العمل / الكلية</th>
                             <th>رقم الهاتف</th>
-                            <th>البريد الإلكتروني</th>
-                            <th>وقت التسجيل</th>
+                            <th>وقت تسجيل الحضور</th>
                         </tr>
                     </thead>
                     <tbody id="table-body">
                         <tr>
-                            <td colspan="9" style="text-align: center; padding: 40px; color: #94A3B8;">جارٍ تحميل سجلات الحضور...</td>
+                            <td colspan="8" style="text-align: center; padding: 40px; color: #94A3B8;">جارٍ تحميل سجلات الحضور...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -524,7 +523,6 @@
                         <td>${escapeHtml(row.role_title || '—')}</td>
                         <td>${escapeHtml(row.workplace || '—')}</td>
                         <td dir="ltr" style="text-align: right;">${escapeHtml(row.phone || '—')}</td>
-                        <td dir="ltr" style="text-align: right;">${escapeHtml(row.email || '—')}</td>
                         <td>${timeStr}</td>
                     </tr>
                 `;
@@ -538,7 +536,7 @@
                 return;
             }
 
-            const headers = ['رقم القيد', 'الاسم الكامل', 'الصفة', 'المسمى الوظيفي', 'مكان العمل/الكلية', 'رقم الهاتف', 'البريد الإلكتروني', 'وقت التسجيل'];
+            const headers = ['رقم القيد', 'الاسم الكامل', 'الصفة', 'المسمى الوظيفي', 'مكان العمل/الكلية', 'رقم الهاتف', 'وقت التسجيل'];
             const rows = allData.map(d => [
                 `"${d.serial || ''}"`,
                 `"${(d.full_name || '').replace(/"/g, '""')}"`,
@@ -546,7 +544,6 @@
                 `"${(d.role_title || '').replace(/"/g, '""')}"`,
                 `"${(d.workplace || '').replace(/"/g, '""')}"`,
                 `"\t${d.phone || ''}"`, // \t prevents Excel from formatting phone number as scientific notation
-                `"${d.email || ''}"`,
                 `"${d.created_at ? new Date(d.created_at).toLocaleString('ar-IQ') : ''}"`
             ]);
 
@@ -658,3 +655,4 @@
     </script>
 </body>
 </html>
+

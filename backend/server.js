@@ -124,24 +124,23 @@ app.post('/api/events/:slug/register', async (req, res) => {
     const slug = req.params.slug || config.DEFAULT_EVENT_SLUG;
     const { full_name, phone, email, role_title, workplace, lang } = req.body;
 
-    if (!full_name || !phone || !email) {
+    if (!full_name || !phone) {
         return res.status(400).json({
             success: false,
-            message: 'الاسم الكامل، رقم الهاتف، والبريد الإلكتروني مطلوبة'
+            message: 'الاسم الكامل ورقم الهاتف مطلوبان'
         });
     }
 
     const phone_norm = normalizePhone(phone);
-    const email_norm = normalizeEmail(email);
+    const email_norm = email ? normalizeEmail(email) : '';
 
     // Mock Mode Execution
     if (isMockMode) {
         const key = `${slug}_${phone_norm}`;
-        const emailKey = `${slug}_${email_norm}`;
 
-        // Deduplication check
-        if (mockStore.registrations.has(key) || mockStore.registrations.has(emailKey)) {
-            const existing = mockStore.registrations.get(key) || mockStore.registrations.get(emailKey);
+        // Deduplication check strictly on phone
+        if (mockStore.registrations.has(key)) {
+            const existing = mockStore.registrations.get(key);
             return res.status(200).json({
                 success: true,
                 already_registered: true,
@@ -172,7 +171,6 @@ app.post('/api/events/:slug/register', async (req, res) => {
         };
 
         mockStore.registrations.set(key, record);
-        mockStore.registrations.set(emailKey, record);
 
         if (mockStore.events[slug]) {
             mockStore.events[slug].total_registrations++;

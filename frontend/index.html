@@ -54,8 +54,8 @@
         <!-- ===== Registration Form ===== -->
         <form class="register-form" id="register-form" novalidate autocomplete="on">
             <div class="form-intro">
-                <h2 class="form-title" data-ar="تسجيل الحضور" data-en="Attendance Registration">تسجيل الحضور</h2>
-                <p class="form-desc" data-ar="يرجى إدخال بياناتك لتأكيد حضورك واستلام بطاقة الدخول الرقمية" data-en="Please enter your details to confirm your attendance and get your digital pass">يرجى إدخال بياناتك لتأكيد حضورك واستلام بطاقة الدخول الرقمية</p>
+                <h2 class="form-title" data-ar="تسجيل الحضور" data-en="Attendance Confirmation">تسجيل الحضور</h2>
+                <p class="form-desc" data-ar="يرجى إدخال بياناتك لتأكيد حضورك في المحاضرة العلمية" data-en="Please enter your details to confirm your attendance">يرجى إدخال بياناتك لتأكيد حضورك في المحاضرة العلمية</p>
             </div>
 
             <!-- الاسم الكامل -->
@@ -100,27 +100,6 @@
                     maxlength="20"
                 >
                 <span class="form-error" id="error-phone" role="alert"></span>
-            </div>
-
-            <!-- البريد الإلكتروني -->
-            <div class="form-group" id="group-email">
-                <label class="form-label" for="email">
-                    <span class="label-text" data-ar="البريد الإلكتروني" data-en="Email Address">البريد الإلكتروني</span>
-                    <span class="required-star">*</span>
-                </label>
-                <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    class="form-input form-input--ltr"
-                    placeholder="example@email.com"
-                    data-ar-placeholder="example@email.com"
-                    data-en-placeholder="example@email.com"
-                    autocomplete="email"
-                    inputmode="email"
-                    required
-                >
-                <span class="form-error" id="error-email" role="alert"></span>
             </div>
 
             <!-- المسمى الوظيفي / الدور -->
@@ -179,52 +158,51 @@
 
             <!-- زر الإرسال -->
             <button type="submit" class="submit-btn" id="submit-btn">
-                <span class="submit-btn-text" data-ar="تأكيد الحضور واستلام البطاقة" data-en="Confirm Attendance & Get Pass">تأكيد الحضور واستلام البطاقة</span>
+                <span class="submit-btn-text" data-ar="تأكيد تسجيل الحضور" data-en="Confirm Attendance">تأكيد تسجيل الحضور</span>
                 <span class="submit-btn-loading" aria-hidden="true">
                     <svg class="spinner" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31.4 31.4" stroke-linecap="round"/></svg>
-                    <span data-ar="جارٍ التسجيل..." data-en="Registering...">جارٍ التسجيل...</span>
+                    <span data-ar="جارٍ التسجيل..." data-en="Confirming...">جارٍ التسجيل...</span>
                 </span>
             </button>
         </form>
 
-        <!-- ===== شاشة بطاقة الحضور الرسمية (Digital Pass) ===== -->
-        <div class="result-screen" id="screen-pass" hidden>
-            <div class="pass-wrapper">
-                <div class="pass-header">
-                    <div class="pass-stamp">جامعة الفارابي</div>
-                    <div class="pass-type-badge" id="pass-type-badge">بطاقة حضور رسمية</div>
+        <!-- ===== شاشة تأكيد الحضور (Attendance Confirmed) ===== -->
+        <div class="result-screen" id="screen-confirmed" hidden>
+            <div class="confirmed-card">
+                <div class="confirmed-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
                 </div>
 
-                <div class="pass-body">
-                    <h2 class="pass-name" id="pass-name">—</h2>
-                    <p class="pass-role" id="pass-role">—</p>
-                    <p class="pass-workplace" id="pass-workplace">—</p>
+                <div class="confirmed-badge" id="confirmed-badge">تم تسجيل الحضور رسمياً</div>
+                <h2 class="confirmed-title" data-ar="تم تأكيد حضورك بنجاح!" data-en="Attendance Confirmed!">تم تأكيد حضورك بنجاح!</h2>
+                <p class="confirmed-sub" data-ar="أهلاً بك في رحاب جامعة الفارابي — قاعة بابل" data-en="Welcome to Alfarabi University — Babil Hall">أهلاً بك في رحاب جامعة الفارابي — قاعة بابل</p>
 
-                    <div class="pass-divider"></div>
-
-                    <div class="pass-event-info">
-                        <div class="pass-event-title">AI Is Not As We Know It</div>
-                        <div class="pass-event-speaker">البروفيسور الدكتور ضياء الجميلي</div>
-                        <div class="pass-event-venue">📍 قاعة بابل • الاثنين 2026/11/2</div>
+                <div class="confirmed-details">
+                    <div class="detail-row">
+                        <span class="detail-label" data-ar="الاسم" data-en="Name">الاسم</span>
+                        <span class="detail-value" id="conf-name">—</span>
                     </div>
-
-                    <div class="pass-footer">
-                        <div class="pass-serial-block">
-                            <span class="pass-label">رقم القيد الفريد</span>
-                            <span class="pass-serial" id="pass-serial">ALF-2026-000000</span>
-                        </div>
-                        <canvas id="pass-qr-canvas" width="90" height="90"></canvas>
+                    <div class="detail-row">
+                        <span class="detail-label" data-ar="الصفة" data-en="Role">الصفة</span>
+                        <span class="detail-value" id="conf-role">—</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label" data-ar="جهة العمل" data-en="Workplace">جهة العمل</span>
+                        <span class="detail-value" id="conf-workplace">—</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label" data-ar="رقم القيد" data-en="Serial">رقم القيد</span>
+                        <span class="detail-value serial-code" id="conf-serial">—</span>
                     </div>
                 </div>
-            </div>
 
-            <div class="pass-actions">
-                <button type="button" class="btn-save-pass" onclick="window.print()">
-                    <span>🖨️ طباعة أو حفظ البطاقة</span>
-                </button>
-                <button type="button" class="btn-new-reg" id="btn-register-another">
-                    <span>تسجيل شخص آخر</span>
-                </button>
+                <div class="confirmed-actions">
+                    <button type="button" class="btn-another" id="btn-register-another">
+                        <span data-ar="تسجيل شخص آخر" data-en="Register another person">تسجيل شخص آخر</span>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -244,8 +222,6 @@
 
     </main>
 
-    <!-- QR Code Script -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
