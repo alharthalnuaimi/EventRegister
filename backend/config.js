@@ -9,3 +9,4 @@ module.exports = {
     RATE_LIMIT_MAX_REQUESTS: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS, 10) || 120, // 120 req/min per IP
     DEFAULT_EVENT_SLUG: process.env.DEFAULT_EVENT_SLUG || 'ai-lecture-2026'
 };
+

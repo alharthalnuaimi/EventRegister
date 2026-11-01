@@ -334,6 +334,20 @@ function renderAttendeeSuccess(data) {
 
 async function loadEventInfo() {
     const display = document.getElementById('event-name-display');
+
+    if (!SUPABASE_URL || SUPABASE_URL.includes('YOUR_PROJECT')) {
+        try {
+            const res = await fetchWithRetry(`/api/events/${encodeURIComponent(EVENT_SLUG)}`);
+            if (res.ok) {
+                const data = await res.json();
+                if (data.event && data.event.name) {
+                    display.textContent = data.event.name;
+                    return true;
+                }
+            }
+        } catch (e) {}
+    }
+
     try {
         const events = await supabase.get('events', `slug=eq.${EVENT_SLUG}&select=name,event_date,is_open,opens_at,closes_at`);
 
@@ -369,6 +383,37 @@ async function loadEventInfo() {
 async function register(formData) {
     const phone_norm = normalizePhone(formData.phone);
     const email_norm = normalizeEmail(formData.email);
+
+    // 0. If local test server mode (No live Supabase credentials configured yet)
+    if (!SUPABASE_URL || SUPABASE_URL.includes('YOUR_PROJECT')) {
+        const res = await fetchWithRetry(`/api/events/${encodeURIComponent(EVENT_SLUG)}/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                full_name: formData.fullname.trim(),
+                phone: formData.phone,
+                email: formData.email,
+                role_title: formData.role.trim(),
+                workplace: formData.workplace.trim(),
+                lang: currentLang
+            })
+        });
+        const result = await res.json();
+        if (!res.ok && !result.already_registered) {
+            throw new Error(result.message || (currentLang === 'ar' ? 'فشل التسجيل' : 'Registration failed'));
+        }
+        return {
+            registration_id: result.registration_id,
+            kind: result.kind || 'attendee',
+            already_registered: !!result.already_registered,
+            serial: result.serial,
+            full_name: formData.fullname,
+            phone: formData.phone,
+            email: formData.email,
+            role: formData.role,
+            workplace: formData.workplace
+        };
+    }
 
     // 1. Try atomic PostgreSQL RPC first (Single round-trip, zero race condition)
     try {

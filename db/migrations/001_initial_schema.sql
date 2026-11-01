@@ -67,3 +67,4 @@ CREATE INDEX IF NOT EXISTS idx_registrations_event_email ON registrations (event
 CREATE INDEX IF NOT EXISTS idx_volunteers_event_phone ON volunteers (event_id, phone_norm);
 CREATE INDEX IF NOT EXISTS idx_volunteers_event_email ON volunteers (event_id, email_norm);
 CREATE INDEX IF NOT EXISTS idx_certificates_queue ON certificates (status, created_at) WHERE status = 'pending';
+

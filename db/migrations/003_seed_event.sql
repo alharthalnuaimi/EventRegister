@@ -41,3 +41,4 @@ SELECT
 FROM events 
 WHERE slug = 'ai-lecture-2026'
 ON CONFLICT DO NOTHING;
+

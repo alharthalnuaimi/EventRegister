@@ -283,6 +283,18 @@
         // Live counter: Uses get_event_display RPC or fallback, polled every 8 seconds
         async function updateCounter() {
             try {
+                if (!SUPABASE_URL || SUPABASE_URL.includes('YOUR_PROJECT')) {
+                    const res = await fetch(`/api/events/${encodeURIComponent(EVENT_SLUG)}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.event && typeof data.event.total_registrations !== 'undefined') {
+                            document.getElementById('counter-number').textContent = data.event.total_registrations;
+                            if (data.event.name) document.getElementById('display-title').textContent = data.event.name;
+                            return;
+                        }
+                    }
+                }
+
                 const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_event_display`, {
                     method: 'POST',
                     headers: {

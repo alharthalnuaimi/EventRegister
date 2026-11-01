@@ -139,3 +139,4 @@
 - [ ] Connect live attendee counter with 5-second debounced polling or Supabase Realtime channel.
 - [ ] Configure QR code to automatically point to the current hosted URL with `?event=ai-lecture-2026`.
 - [ ] Verify responsive layout on projector resolutions (1080p and 4K).
+
