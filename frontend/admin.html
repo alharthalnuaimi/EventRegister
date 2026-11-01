@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         :root {
             --midnight: #02040f;
@@ -432,10 +433,12 @@
             background: var(--navy-mid);
             border: 1px solid var(--gold);
             border-radius: var(--radius-md);
-            max-width: 540px;
+            max-width: 580px;
             width: 100%;
             padding: 26px 28px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
         .modal-box h3 {
@@ -448,7 +451,7 @@
         .modal-box p {
             font-size: 13px;
             color: var(--ivory-dim);
-            margin-bottom: 18px;
+            margin-bottom: 16px;
             line-height: 1.5;
         }
 
@@ -515,7 +518,7 @@
 
         .modal-txt {
             width: 100%;
-            height: 140px;
+            height: 130px;
             background: var(--midnight);
             border: 1px solid var(--glass-border);
             border-radius: var(--radius-sm);
@@ -524,8 +527,118 @@
             font-family: inherit;
             font-size: 13px;
             resize: vertical;
-            margin-bottom: 14px;
+            margin-bottom: 10px;
             box-sizing: border-box;
+        }
+
+        /* Import Drop Zone */
+        .drop-zone {
+            border: 2px dashed rgba(201, 168, 76, 0.35);
+            border-radius: var(--radius-sm);
+            padding: 18px;
+            text-align: center;
+            background: rgba(2, 4, 15, 0.5);
+            color: var(--ivory-dim);
+            font-size: 13px;
+            cursor: pointer;
+            margin-bottom: 14px;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: var(--gold);
+            background: rgba(201, 168, 76, 0.08);
+            color: var(--gold-light);
+        }
+
+        .drop-zone svg {
+            width: 28px;
+            height: 28px;
+            stroke: var(--gold);
+            fill: none;
+            stroke-width: 1.8;
+        }
+
+        .import-notice {
+            background: rgba(201, 168, 76, 0.1);
+            border: 1px solid rgba(201, 168, 76, 0.3);
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+            font-size: 12px;
+            color: var(--gold-light);
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 14px;
+            line-height: 1.5;
+        }
+
+        .import-notice svg {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+            fill: none;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .import-stats {
+            background: rgba(13, 18, 69, 0.8);
+            border: 1px solid rgba(201, 168, 76, 0.3);
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 12px;
+            color: var(--gold-light);
+            margin-bottom: 12px;
+            display: none;
+        }
+
+        /* Roster Table */
+        .roster-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            margin-top: 12px;
+        }
+
+        .roster-table th {
+            background: rgba(5, 8, 43, 0.8);
+            color: var(--gold);
+            padding: 10px 12px;
+            text-align: right;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .roster-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(245, 240, 232, 0.05);
+            color: var(--ivory);
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 8px;
+            border-radius: 100px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .status-pill--attended {
+            background: rgba(56, 189, 248, 0.15);
+            color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.35);
+        }
+
+        .status-pill--pending {
+            background: rgba(245, 240, 232, 0.08);
+            color: var(--ivory-dim);
+            border: 1px solid rgba(245, 240, 232, 0.15);
         }
     </style>
 </head>
@@ -549,7 +662,11 @@
                 </button>
                 <button class="btn-adm btn-adm--glass" id="btnImportModal">
                     <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                    استيراد فريق التنظيم
+                    استيراد فريق التنظيم (Excel / Text)
+                </button>
+                <button class="btn-adm btn-adm--glass" id="btnRosterModal">
+                    <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>
+                    متابعة فريق التنظيم (<span id="btnRosterCount">0</span>)
                 </button>
                 <button class="btn-adm btn-adm--gold" id="btnExport">
                     <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
@@ -571,7 +688,7 @@
             <div class="metric-card">
                 <div class="metric-label">إجمالي الحضور المسجل</div>
                 <div class="metric-value" id="valTotal">0</div>
-                <div class="metric-sub">جميع القيود المعتمدة رسمياً</div>
+                <div class="metric-sub">جميع من حضر وسجل رسمياً عبر الرابط</div>
             </div>
             <div class="metric-card metric-card--prof">
                 <div class="metric-label">الأساتذة والتدريسيون</div>
@@ -581,7 +698,7 @@
             <div class="metric-card metric-card--vol">
                 <div class="metric-label">فريق التنظيم والمعتمدين</div>
                 <div class="metric-value" id="valVolunteers">0</div>
-                <div class="metric-sub">كوادر تنظيم وإدارة المحاضرة</div>
+                <div class="metric-sub">كوادر تنظيم وإدارة المحاضرة المسجلين</div>
             </div>
             <div class="metric-card metric-card--att">
                 <div class="metric-label">الضيوف والطلبة</div>
@@ -734,15 +851,73 @@
         </div>
     </div>
 
-    <!-- Import Volunteers Modal -->
+    <!-- Import Volunteers Modal (Excel / CSV / TXT / Paste) -->
     <div class="modal-wrap" id="importModal">
         <div class="modal-box">
-            <h3>استيراد أسماء فريق التنظيم</h3>
-            <p>أدخل بيانات المنظمين لتمييزهم تلقائياً في السجل. التنسيق: الاسم، رقم الهاتف، المسمى في كل سطر.</p>
+            <h3>استيراد واعتماد فريق التنظيم والمعتمدين</h3>
+
+            <div class="import-notice">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                <span><strong>تنويه تنظيمي:</strong> هذه الأداة تعتمد قائمة المنظمين والأعضاء المميزين لتمييزهم تلقائياً فور تسجيل حضورهم بأنفسهم عبر الرابط، ولن تسجل حضورهم مسبقاً—حيث يقوم كل عضو بتأكيد حضوره بنفسه.</span>
+            </div>
+
+            <!-- Drag & Drop Zone for Excel / TXT / CSV -->
+            <div class="drop-zone" id="dropZone" onclick="document.getElementById('importFileInput').click()">
+                <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                <span><strong>انقر لاختيار ملف</strong> أو اسحب ملف Excel (.xlsx, .xls) أو نص (.csv, .txt) هنا</span>
+                <span style="font-size: 11px; color: var(--gold-light);">يتعرف تلقائياً على أعمدة: الاسم، رقم الهاتف، المسمى</span>
+                <input type="file" id="importFileInput" accept=".xlsx,.xls,.csv,.txt" style="display: none;">
+            </div>
+
+            <div class="import-stats" id="importStats"></div>
+
+            <p style="margin-bottom: 6px; font-size: 12px; color: var(--gold-light);">أو اكتب / الصق الأسماء مباشرة هنا (الاسم، الهاتف، المسمى في كل سطر):</p>
             <textarea class="modal-txt" id="importText" placeholder="علي حسن, 07701234567, منسق قاعة بابل&#10;مريم أحمد, 07801234567, مسؤولة الاستقبال"></textarea>
+
             <div class="modal-actions">
                 <button type="button" class="btn-adm btn-adm--glass" onclick="closeModal('importModal')">إلغاء</button>
-                <button type="button" class="btn-adm btn-adm--gold" id="btnSubmitImport">حفظ واعتماد</button>
+                <button type="button" class="btn-adm btn-adm--gold" id="btnSubmitImport">حفظ واعتماد الفريق</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Roster / Team Tracking Modal -->
+    <div class="modal-wrap" id="rosterModal">
+        <div class="modal-box" style="max-width: 680px;">
+            <h3>سجل متابعة فريق التنظيم المعتمد</h3>
+            <p>قائمة الأعضاء المعتمدين لمتابعة من حضر وسجل رسمياً ومن لم يسجل بعد.</p>
+
+            <div style="display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;">
+                <div style="background: rgba(201, 168, 76, 0.15); border: 1px solid var(--gold); border-radius: 6px; padding: 6px 14px; font-size: 13px;">
+                    إجمالي المعتمدين: <strong id="rosterTotalCount">0</strong>
+                </div>
+                <div style="background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; border-radius: 6px; padding: 6px 14px; font-size: 13px;">
+                    حضر وسجل: <strong id="rosterAttendedCount">0</strong>
+                </div>
+                <div style="background: rgba(245, 240, 232, 0.08); border: 1px solid rgba(245, 240, 232, 0.2); border-radius: 6px; padding: 6px 14px; font-size: 13px;">
+                    بانتظار الحضور: <strong id="rosterPendingCount">0</strong>
+                </div>
+            </div>
+
+            <div style="max-height: 340px; overflow-y: auto; border: 1px solid var(--glass-border); border-radius: var(--radius-sm);">
+                <table class="roster-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>الاسم الكامل</th>
+                            <th>المسمى</th>
+                            <th>الهاتف</th>
+                            <th style="text-align: center;">حالة الحضور</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rosterTableRows">
+                        <tr><td colspan="5" style="text-align: center; padding: 24px; color: var(--ivory-dim);">لم يتم استيراد أي عضو في فريق التنظيم بعد.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn-adm btn-adm--glass" onclick="closeModal('rosterModal')">إغلاق</button>
             </div>
         </div>
     </div>
@@ -754,6 +929,7 @@
         const EVENT_SLUG = new URLSearchParams(window.location.search).get('event') || 'ai-lecture-2026';
 
         let dataRows = [];
+        let approvedVolunteers = [];
         let activeFilter = 'all';
         let deleteTargetId = null;
 
@@ -834,6 +1010,8 @@
                 loadLocal();
                 render();
             }
+
+            loadApprovedVolunteers();
         }
 
         function saveLocal() {
@@ -842,6 +1020,21 @@
 
         function loadLocal() {
             dataRows = JSON.parse(localStorage.getItem('alfarabi_admin_attendees_' + EVENT_SLUG) || '[]');
+        }
+
+        function saveApprovedVolunteers() {
+            localStorage.setItem('alfarabi_approved_volunteers_' + EVENT_SLUG, JSON.stringify(approvedVolunteers));
+            updateRosterBadgeCount();
+        }
+
+        function loadApprovedVolunteers() {
+            approvedVolunteers = JSON.parse(localStorage.getItem('alfarabi_approved_volunteers_' + EVENT_SLUG) || '[]');
+            updateRosterBadgeCount();
+        }
+
+        function updateRosterBadgeCount() {
+            const countSpan = document.getElementById('btnRosterCount');
+            if (countSpan) countSpan.textContent = approvedVolunteers.length;
         }
 
         function render() {
@@ -926,7 +1119,7 @@
             }).join('');
         }
 
-        // Add Attendee
+        // Add Attendee (manual registration)
         async function submitAddAttendee() {
             const fullName = document.getElementById('addFullName').value.trim();
             const phone = document.getElementById('addPhone').value.trim();
@@ -941,7 +1134,6 @@
             }
 
             try {
-                // 1. Call atomic registration
                 const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/register_attendee`, {
                     method: 'POST',
                     headers: {
@@ -963,7 +1155,6 @@
                 const result = await res.json();
                 if (res.ok && result.success) {
                     if (kind === 'volunteer') {
-                        // Mark as volunteer in volunteers table
                         await fetch(`${SUPABASE_URL}/rest/v1/rpc/import_volunteers_list`, {
                             method: 'POST',
                             headers: {
@@ -1032,7 +1223,6 @@
             const row = dataRows.find(r => r.id === id);
             if (!row) return;
 
-            // Attempt Supabase RPC update
             try {
                 await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_update_registration`, {
                     method: 'POST',
@@ -1052,7 +1242,6 @@
                 }).catch(() => {});
             } catch (e) {}
 
-            // Update in local data
             row.full_name = fullName;
             row.phone = phone_norm;
             row.role_title = role;
@@ -1098,7 +1287,6 @@
             render();
         }
 
-        // Quick Role Chip Setter
         function setRole(modalType, roleText) {
             const input = document.getElementById(modalType === 'add' ? 'addRole' : 'editRole');
             if (input) input.value = roleText;
@@ -1110,6 +1298,209 @@
 
         function closeModal(modalId) {
             document.getElementById(modalId).classList.remove('open');
+        }
+
+        // File Handler for Excel (.xlsx, .xls) and Text (.csv, .txt)
+        function handleImportFile(file) {
+            if (!file) return;
+            const ext = file.name.split('.').pop().toLowerCase();
+
+            if (ext === 'xlsx' || ext === 'xls') {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                        parseImportRows(rows, file.name);
+                    } catch (err) {
+                        console.error(err);
+                        alert('تعذر قراءة ملف Excel، يرجى التأكد من تنسيق الملف');
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            } else {
+                // txt or csv
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const text = e.target.result;
+                    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                    const formatted = [];
+                    lines.forEach(line => {
+                        const parts = line.split(/[,;\t]/).map(p => p.trim());
+                        if (parts.length >= 2) {
+                            formatted.push(`${parts[0]}, ${parts[1]}, ${parts[2] || 'فريق التنظيم'}`);
+                        }
+                    });
+                    document.getElementById('importText').value = formatted.join('\n');
+                    showImportStats(formatted.length, file.name);
+                };
+                reader.readAsText(file, 'utf-8');
+            }
+        }
+
+        function parseImportRows(rows, fileName) {
+            if (!rows || rows.length === 0) return;
+
+            let startIdx = 0;
+            const firstRow = rows[0].map(c => String(c || '').trim().toLowerCase());
+            const hasHeader = firstRow.some(c => c.includes('اسم') || c.includes('name') || c.includes('هاتف') || c.includes('phone'));
+            if (hasHeader) startIdx = 1;
+
+            let nameCol = 0, phoneCol = 1, roleCol = 2;
+            if (hasHeader) {
+                firstRow.forEach((h, i) => {
+                    if (h.includes('اسم') || h.includes('name')) nameCol = i;
+                    else if (h.includes('هاتف') || h.includes('phone') || h.includes('موبايل') || h.includes('رقم')) phoneCol = i;
+                    else if (h.includes('صفة') || h.includes('مسمى') || h.includes('دور') || h.includes('role') || h.includes('title')) roleCol = i;
+                });
+            }
+
+            const lines = [];
+            for (let i = startIdx; i < rows.length; i++) {
+                const row = rows[i];
+                if (!row || row.length === 0) continue;
+                const name = String(row[nameCol] || '').trim();
+                const phone = String(row[phoneCol] || '').trim();
+                const role = String(row[roleCol] || 'فريق التنظيم').trim();
+                if (name && phone) {
+                    lines.push(`${name}, ${phone}, ${role}`);
+                }
+            }
+
+            document.getElementById('importText').value = lines.join('\n');
+            showImportStats(lines.length, fileName);
+        }
+
+        function showImportStats(count, source) {
+            const stats = document.getElementById('importStats');
+            stats.style.display = 'block';
+            stats.innerHTML = `تم استخراج <strong>${count}</strong> اسماً من ملف <em>${escapeHtml(source)}</em> بنجاح. راجع الأسماء أدناه ثم انقر "حفظ واعتماد الفريق".`;
+        }
+
+        // Submit Approved Volunteers (Pre-approval only — DOES NOT create fake attendance!)
+        async function submitVolunteers() {
+            const raw = document.getElementById('importText').value.trim();
+            if (!raw) {
+                alert('يرجى اختيار ملف أو إدخال أسماء وأرقام هواتف فريق التنظيم');
+                return;
+            }
+
+            const lines = raw.split('\n');
+            const volunteers = [];
+
+            for (const line of lines) {
+                const parts = line.split(/[,،;\t]/).map(s => s.trim());
+                if (parts.length >= 2) {
+                    const normP = normalizePhone(parts[1]);
+                    if (normP) {
+                        volunteers.push({
+                            full_name: parts[0],
+                            phone: normP,
+                            role_title: parts[2] || 'فريق التنظيم'
+                        });
+                    }
+                }
+            }
+
+            if (volunteers.length === 0) {
+                alert('يرجى التأكد من كتابة الاسم ورقم الهاتف بصيغة صحيحة في كل سطر');
+                return;
+            }
+
+            // 1. Send to Supabase volunteers table
+            try {
+                await fetch(`${SUPABASE_URL}/rest/v1/rpc/import_volunteers_list`, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SUPABASE_ANON,
+                        'Authorization': `Bearer ${SUPABASE_ANON}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ p_event_slug: EVENT_SLUG, p_volunteers: volunteers })
+                }).catch(() => {});
+            } catch (e) {}
+
+            // 2. Merge into approvedVolunteers roster
+            volunteers.forEach(v => {
+                const existing = approvedVolunteers.find(av => av.phone === v.phone);
+                if (existing) {
+                    existing.full_name = v.full_name;
+                    existing.role_title = v.role_title;
+                } else {
+                    approvedVolunteers.push(v);
+                }
+            });
+            saveApprovedVolunteers();
+
+            // 3. Highlight any matching attendees WHO ALREADY REGISTERED (does not add new rows!)
+            let highlightedCount = 0;
+            dataRows.forEach(row => {
+                const match = volunteers.find(v => v.phone === row.phone || (v.full_name && row.full_name && row.full_name.includes(v.full_name)));
+                if (match) {
+                    row.kind = 'volunteer';
+                    if (match.role_title) row.role_title = match.role_title;
+                    highlightedCount++;
+                }
+            });
+
+            saveLocal();
+            closeModal('importModal');
+            document.getElementById('importText').value = '';
+            document.getElementById('importStats').style.display = 'none';
+            render();
+
+            alert(
+                `تم اعتماد ${volunteers.length} عضواً في فريق التنظيم بنجاح.\n\n` +
+                `تنويه: تم تمييز ${highlightedCount} عضواً مسجلاً بالفعل، أما البقية فسيتم تمييزهم تلقائياً فور تسجيل حضورهم بأنفسهم.`
+            );
+        }
+
+        // Open Managing Team Roster Modal
+        function openRosterModal() {
+            loadApprovedVolunteers();
+            const modal = document.getElementById('rosterModal');
+            const tbody = document.getElementById('rosterTableRows');
+
+            document.getElementById('rosterTotalCount').textContent = approvedVolunteers.length;
+
+            let attendedCount = 0;
+            let pendingCount = 0;
+
+            if (approvedVolunteers.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 24px; color: var(--ivory-dim);">لم يتم استيراد أي عضو في فريق التنظيم بعد. انقر على "استيراد فريق التنظيم" للبدء.</td></tr>`;
+                document.getElementById('rosterAttendedCount').textContent = 0;
+                document.getElementById('rosterPendingCount').textContent = 0;
+                modal.classList.add('open');
+                return;
+            }
+
+            tbody.innerHTML = approvedVolunteers.map((vol, idx) => {
+                const match = dataRows.find(r => r.phone === vol.phone);
+                const hasAttended = !!match;
+                if (hasAttended) attendedCount++;
+                else pendingCount++;
+
+                return `
+                    <tr>
+                        <td style="color: rgba(245, 240, 232, 0.4);">${idx + 1}</td>
+                        <td><strong>${escapeHtml(vol.full_name)}</strong></td>
+                        <td>${escapeHtml(vol.role_title || 'فريق التنظيم')}</td>
+                        <td dir="ltr" style="text-align: right;">${escapeHtml(vol.phone || '—')}</td>
+                        <td style="text-align: center;">
+                            ${hasAttended
+                                ? `<span class="status-pill status-pill--attended">حضر وسجل (${match.serial || 'مسجل'})</span>`
+                                : `<span class="status-pill status-pill--pending">بانتظار الحضور والتسجيل</span>`
+                            }
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            document.getElementById('rosterAttendedCount').textContent = attendedCount;
+            document.getElementById('rosterPendingCount').textContent = pendingCount;
+            modal.classList.add('open');
         }
 
         // Export to Excel with Categories
@@ -1143,57 +1534,6 @@
             a.click();
         }
 
-        // Import Volunteers List
-        async function submitVolunteers() {
-            const raw = document.getElementById('importText').value.trim();
-            if (!raw) return;
-
-            const lines = raw.split('\n');
-            const volunteers = [];
-
-            for (const line of lines) {
-                const parts = line.split(/[,،]/).map(s => s.trim());
-                if (parts.length >= 2) {
-                    volunteers.push({
-                        full_name: parts[0],
-                        phone: normalizePhone(parts[1]),
-                        role_title: parts[2] || 'فريق التنظيم'
-                    });
-                }
-            }
-
-            if (volunteers.length === 0) {
-                alert('يرجى كتابة الاسم ورقم الهاتف في كل سطر');
-                return;
-            }
-
-            try {
-                await fetch(`${SUPABASE_URL}/rest/v1/rpc/import_volunteers_list`, {
-                    method: 'POST',
-                    headers: {
-                        'apikey': SUPABASE_ANON,
-                        'Authorization': `Bearer ${SUPABASE_ANON}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ p_event_slug: EVENT_SLUG, p_volunteers: volunteers })
-                }).catch(() => {});
-            } catch (e) {}
-
-            dataRows.forEach(row => {
-                const match = volunteers.find(v => v.phone === row.phone || (v.full_name && row.full_name && row.full_name.includes(v.full_name)));
-                if (match) {
-                    row.kind = 'volunteer';
-                    if (match.role_title) row.role_title = match.role_title;
-                }
-            });
-
-            saveLocal();
-            closeModal('importModal');
-            document.getElementById('importText').value = '';
-            render();
-            alert(`تم اعتماد ${volunteers.length} عضواً في فريق التنظيم بنجاح.`);
-        }
-
         function escapeHtml(str) {
             if (!str) return '';
             const d = document.createElement('div');
@@ -1207,8 +1547,38 @@
         document.getElementById('searchInput').addEventListener('input', render);
         document.getElementById('btnAddModal').addEventListener('click', () => document.getElementById('addModal').classList.add('open'));
         document.getElementById('btnImportModal').addEventListener('click', () => document.getElementById('importModal').classList.add('open'));
+        document.getElementById('btnRosterModal').addEventListener('click', openRosterModal);
         document.getElementById('btnSubmitImport').addEventListener('click', submitVolunteers);
         document.getElementById('btnConfirmDelete').addEventListener('click', confirmDeleteAttendee);
+
+        // File upload input listener
+        const fileInput = document.getElementById('importFileInput');
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) {
+                handleImportFile(e.target.files[0]);
+            }
+        });
+
+        // Drag and drop listeners
+        const dropZone = document.getElementById('dropZone');
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            }, false);
+        });
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+            }, false);
+        });
+        dropZone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            if (dt && dt.files && dt.files[0]) {
+                handleImportFile(dt.files[0]);
+            }
+        });
 
         document.querySelectorAll('.tab-item').forEach(btn => {
             btn.addEventListener('click', () => {

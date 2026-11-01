@@ -85,3 +85,4 @@ $$;
 
 GRANT EXECUTE ON FUNCTION admin_delete_registration(UUID) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION admin_update_registration(UUID, TEXT, TEXT, TEXT, TEXT, TEXT) TO anon, authenticated;
+
