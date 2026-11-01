@@ -47,7 +47,7 @@ const frontendPath = path.join(__dirname, '..', 'frontend');
 app.use(express.static(frontendPath));
 
 // Clean URL routes
-app.get('/admin', (req, res) => res.sendFile(path.join(frontendPath, 'admin.html')));
+app.get(['/admin', '/dashboard', '/panel'], (req, res) => res.sendFile(path.join(frontendPath, 'admin.html')));
 app.get('/display', (req, res) => res.sendFile(path.join(frontendPath, 'display.html')));
 
 // 5. Shared IP Rate Limiting (Campus Wi-Fi friendly: 1500 req/min for auditorium NAT)
