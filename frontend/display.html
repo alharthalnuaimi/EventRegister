@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="شاشة عرض QR للتسجيل">
+    <meta name="theme-color" content="#FFFFFF">
+    <title>شاشة التسجيل — QR</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --navy:    #0B132B;
+            --crimson: #A51C30;
+            --gold:    #D4AF37;
+        }
+
+        body {
+            font-family: 'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, Arial, sans-serif;
+            background: #FFFFFF;
+            color: var(--navy);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .display-title {
+            font-size: clamp(1.5rem, 4vw, 3rem);
+            font-weight: 700;
+            color: var(--navy);
+            margin-bottom: 12px;
+        }
+
+        .display-subtitle {
+            font-size: clamp(1rem, 2.5vw, 1.5rem);
+            color: var(--crimson);
+            font-weight: 600;
+            margin-bottom: 40px;
+        }
+
+        .qr-container {
+            background: #FFFFFF;
+            border: 20px solid #FFFFFF;
+            outline: 4px solid var(--navy);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 30px;
+            display: inline-block;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+        }
+
+        #qr-canvas {
+            display: block;
+            width: 300px;
+            height: 300px;
+        }
+
+        @media (min-width: 768px) {
+            #qr-canvas {
+                width: 400px;
+                height: 400px;
+            }
+        }
+
+        .display-url {
+            font-size: clamp(1.2rem, 3vw, 2rem);
+            font-weight: 700;
+            color: var(--navy);
+            font-family: 'IBM Plex Mono', monospace, 'IBM Plex Sans Arabic';
+            direction: ltr;
+            margin-bottom: 24px;
+            letter-spacing: 0.02em;
+            word-break: break-all;
+        }
+
+        .live-counter {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 16px 32px;
+            background: linear-gradient(135deg, var(--navy) 0%, #1C2541 100%);
+            color: #FFFFFF;
+            border-radius: 50px;
+            font-size: clamp(1rem, 2vw, 1.3rem);
+            font-weight: 600;
+            margin-top: 10px;
+            box-shadow: 0 4px 20px rgba(11, 19, 43, 0.3);
+        }
+
+        .counter-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #10B981;
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50%      { opacity: 0.5; transform: scale(0.8); }
+        }
+
+        .counter-number {
+            font-size: clamp(1.5rem, 3vw, 2.5rem);
+            font-weight: 700;
+            color: var(--gold);
+        }
+
+        .export-btns {
+            margin-top: 32px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .export-btn {
+            padding: 10px 24px;
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--navy);
+            background: rgba(11, 19, 43, 0.05);
+            border: 2px solid var(--navy);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .export-btn:hover {
+            background: var(--navy);
+            color: #FFFFFF;
+        }
+
+        .footer-note {
+            margin-top: 40px;
+            font-size: 0.85rem;
+            color: #8B93A5;
+        }
+
+        @media print {
+            .export-btns, .footer-note { display: none; }
+            body { padding: 0; }
+            .qr-container { border-width: 30px; outline-width: 6px; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1 class="display-title" id="display-title">سجّل حضورك</h1>
+    <p class="display-subtitle" id="display-subtitle">امسح الرمز بكاميرا هاتفك</p>
+
+    <div class="qr-container">
+        <canvas id="qr-canvas"></canvas>
+    </div>
+
+    <p class="display-url" id="display-url"></p>
+
+    <div class="live-counter" id="live-counter">
+        <span class="counter-dot"></span>
+        <span>عدد المسجلين:</span>
+        <span class="counter-number" id="counter-number">0</span>
+    </div>
+
+    <div class="export-btns">
+        <button class="export-btn" id="export-png" onclick="exportQR('png')">تصدير PNG</button>
+        <button class="export-btn" id="export-svg" onclick="exportQR('svg')">تصدير SVG</button>
+    </div>
+
+    <p class="footer-note">أداة تسجيل الفعاليات</p>
+
+    <!-- QR Code Library (lightweight, ~12KB) -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script>
+        // Configuration
+        const REGISTER_URL = window.location.origin + '/index.html?event=' + (new URLSearchParams(window.location.search).get('event') || 'default-event');
+        const SUPABASE_URL  = 'https://YOUR_PROJECT.supabase.co';
+        const SUPABASE_ANON = 'YOUR_ANON_KEY';
+        const EVENT_SLUG = new URLSearchParams(window.location.search).get('event') || 'default-event';
+
+        // Display the URL
+        document.getElementById('display-url').textContent = REGISTER_URL;
+
+        // Generate QR
+        const canvas = document.getElementById('qr-canvas');
+        QRCode.toCanvas(canvas, REGISTER_URL, {
+            width: canvas.clientWidth,
+            margin: 2,
+            color: { dark: '#0B132B', light: '#FFFFFF' },
+            errorCorrectionLevel: 'H'
+        }, function (err) {
+            if (err) console.error('QR generation error:', err);
+        });
+
+        // Export QR
+        function exportQR(format) {
+            if (format === 'png') {
+                const link = document.createElement('a');
+                link.download = `qr-${EVENT_SLUG}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            } else if (format === 'svg') {
+                QRCode.toString(REGISTER_URL, {
+                    type: 'svg',
+                    margin: 2,
+                    color: { dark: '#0B132B', light: '#FFFFFF' },
+                    errorCorrectionLevel: 'H'
+                }, function (err, svg) {
+                    if (err) return console.error(err);
+                    const blob = new Blob([svg], { type: 'image/svg+xml' });
+                    const link = document.createElement('a');
+                    link.download = `qr-${EVENT_SLUG}.svg`;
+                    link.href = URL.createObjectURL(blob);
+                    link.click();
+                });
+            }
+        }
+
+        // Live counter (polls every 10s)
+        async function updateCounter() {
+            try {
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/registrations?event_id=eq.${EVENT_SLUG}&select=id`, {
+                    headers: {
+                        'apikey': SUPABASE_ANON,
+                        'Authorization': `Bearer ${SUPABASE_ANON}`,
+                        'Prefer': 'count=exact'
+                    }
+                });
+                const count = res.headers.get('content-range');
+                if (count) {
+                    const total = count.split('/')[1];
+                    document.getElementById('counter-number').textContent = total || '0';
+                }
+            } catch (e) {
+                console.warn('Counter update failed:', e);
+            }
+        }
+
+        updateCounter();
+        setInterval(updateCounter, 10000);
+    </script>
+</body>
+</html>
