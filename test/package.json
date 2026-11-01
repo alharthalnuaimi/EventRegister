@@ -1,0 +1,9 @@
+{
+  "name": "event-register-load-test",
+  "version": "1.0.0",
+  "description": "500+ Concurrent user load simulation test for Al-Farabi event registration tool",
+  "main": "load_test_500.js",
+  "scripts": {
+    "test:500": "node load_test_500.js"
+  }
+}

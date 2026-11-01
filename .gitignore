@@ -1,6 +1,8 @@
 # Environment files
 .env
 .env.local
+**/.env
+**/.env.local
 
 # OS files
 .DS_Store
@@ -12,3 +14,11 @@ Thumbs.db
 
 # Node
 node_modules/
+**/node_modules/
+package-lock.json
+**/package-lock.json
+
+# Outputs & Generated Artifacts
+*.pdf
+bot/output/
+bot/sample_cert.pdf

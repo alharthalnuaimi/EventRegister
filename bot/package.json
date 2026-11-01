@@ -1,0 +1,17 @@
+{
+  "name": "event-register-certificate-bot",
+  "version": "1.0.0",
+  "description": "Ultra-fast asynchronous vector PDF certificate worker for Al-Farabi University",
+  "main": "worker.js",
+  "scripts": {
+    "start": "node worker.js",
+    "test-cert": "node -e \"require('./template').generateCertificate({ fullName: 'تجربة مشارك', eventTitle: 'AI Is Not As We Know It', dateStr: '2026/11/02', serial: 'ALF-2026-TEST01', outputPath: './sample_cert.pdf' }).then(() => console.log('Sample cert generated!'))\""
+  },
+  "dependencies": {
+    "@pdf-lib/fontkit": "^1.1.1",
+    "@supabase/supabase-js": "^2.49.1",
+    "dotenv": "^16.4.7",
+    "pdf-lib": "^1.17.1",
+    "qrcode": "^1.5.4"
+  }
+}

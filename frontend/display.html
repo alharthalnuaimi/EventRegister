@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="شاشة عرض QR للتسجيل">
-    <meta name="theme-color" content="#FFFFFF">
-    <title>شاشة التسجيل — QR</title>
+    <meta name="description" content="شاشة عرض QR لتسجيل حضور محاضرة الذكاء الاصطناعي — جامعة الفارابي">
+    <meta name="theme-color" content="#0B132B">
+    <title>شاشة التسجيل — جامعة الفارابي</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
@@ -14,108 +14,157 @@
 
         :root {
             --navy:    #0B132B;
+            --navy-light: #1C2541;
             --crimson: #A51C30;
             --gold:    #D4AF37;
+            --gray:    #64748B;
         }
 
         body {
             font-family: 'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, Arial, sans-serif;
-            background: #FFFFFF;
+            background: linear-gradient(145deg, #F8FAFC 0%, #EDF2F7 100%);
             color: var(--navy);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 40px 20px;
+            padding: 30px 20px;
             text-align: center;
         }
 
+        .header-badge {
+            display: inline-block;
+            background: var(--navy);
+            color: var(--gold);
+            font-weight: 700;
+            font-size: clamp(0.85rem, 1.8vw, 1.15rem);
+            padding: 6px 20px;
+            border-radius: 50px;
+            margin-bottom: 16px;
+            letter-spacing: 0.03em;
+            box-shadow: 0 4px 15px rgba(11, 19, 43, 0.2);
+        }
+
         .display-title {
-            font-size: clamp(1.5rem, 4vw, 3rem);
+            font-size: clamp(1.8rem, 4vw, 3.2rem);
             font-weight: 700;
             color: var(--navy);
-            margin-bottom: 12px;
+            margin-bottom: 10px;
+            line-height: 1.25;
         }
 
         .display-subtitle {
-            font-size: clamp(1rem, 2.5vw, 1.5rem);
+            font-size: clamp(1.1rem, 2.2vw, 1.6rem);
             color: var(--crimson);
             font-weight: 600;
-            margin-bottom: 40px;
+            margin-bottom: 25px;
+        }
+
+        .venue-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(165, 28, 48, 0.08);
+            border: 1px solid rgba(165, 28, 48, 0.2);
+            color: var(--crimson);
+            font-size: 1rem;
+            font-weight: 600;
+            padding: 6px 18px;
+            border-radius: 30px;
+            margin-bottom: 25px;
         }
 
         .qr-container {
             background: #FFFFFF;
-            border: 20px solid #FFFFFF;
+            border: 16px solid #FFFFFF;
             outline: 4px solid var(--navy);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 30px;
+            border-radius: 20px;
+            padding: 15px;
+            margin-bottom: 25px;
             display: inline-block;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+            box-shadow: 0 15px 45px rgba(11, 19, 43, 0.15);
+            transition: transform 0.3s ease;
         }
 
         #qr-canvas {
             display: block;
-            width: 300px;
-            height: 300px;
+            width: 280px;
+            height: 280px;
         }
 
         @media (min-width: 768px) {
             #qr-canvas {
-                width: 400px;
-                height: 400px;
+                width: 360px;
+                height: 360px;
             }
         }
 
-        .display-url {
-            font-size: clamp(1.2rem, 3vw, 2rem);
-            font-weight: 700;
+        @media (min-width: 1400px) {
+            #qr-canvas {
+                width: 420px;
+                height: 420px;
+            }
+        }
+
+        .display-instruction {
+            font-size: clamp(1rem, 2vw, 1.35rem);
+            font-weight: 600;
             color: var(--navy);
-            font-family: 'IBM Plex Mono', monospace, 'IBM Plex Sans Arabic';
+            margin-bottom: 12px;
+        }
+
+        .display-url {
+            font-size: clamp(1rem, 2vw, 1.4rem);
+            font-weight: 700;
+            color: var(--navy-light);
+            font-family: monospace;
             direction: ltr;
-            margin-bottom: 24px;
-            letter-spacing: 0.02em;
+            margin-bottom: 25px;
             word-break: break-all;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 6px 16px;
+            border-radius: 8px;
+            border: 1px solid #CBD5E1;
+            display: inline-block;
         }
 
         .live-counter {
-            display: flex;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 12px;
-            padding: 16px 32px;
+            gap: 14px;
+            padding: 14px 36px;
             background: linear-gradient(135deg, var(--navy) 0%, #1C2541 100%);
             color: #FFFFFF;
             border-radius: 50px;
-            font-size: clamp(1rem, 2vw, 1.3rem);
+            font-size: clamp(1.1rem, 2.2vw, 1.45rem);
             font-weight: 600;
-            margin-top: 10px;
-            box-shadow: 0 4px 20px rgba(11, 19, 43, 0.3);
+            box-shadow: 0 8px 30px rgba(11, 19, 43, 0.3);
+            border: 2px solid var(--gold);
         }
 
         .counter-dot {
-            width: 12px;
-            height: 12px;
+            width: 14px;
+            height: 14px;
             border-radius: 50%;
             background: #10B981;
-            animation: pulse-dot 2s ease-in-out infinite;
+            animation: pulse-dot 1.8s ease-in-out infinite;
         }
 
         @keyframes pulse-dot {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50%      { opacity: 0.5; transform: scale(0.8); }
+            0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 12px #10B981; }
+            50%      { opacity: 0.4; transform: scale(0.75); }
         }
 
         .counter-number {
-            font-size: clamp(1.5rem, 3vw, 2.5rem);
+            font-size: clamp(1.6rem, 3.2vw, 2.6rem);
             font-weight: 700;
             color: var(--gold);
         }
 
         .export-btns {
-            margin-top: 32px;
+            margin-top: 25px;
             display: flex;
             gap: 12px;
             flex-wrap: wrap;
@@ -123,14 +172,14 @@
         }
 
         .export-btn {
-            padding: 10px 24px;
+            padding: 8px 20px;
             font-family: 'IBM Plex Sans Arabic', sans-serif;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: 600;
             color: var(--navy);
-            background: rgba(11, 19, 43, 0.05);
-            border: 2px solid var(--navy);
-            border-radius: 8px;
+            background: #FFFFFF;
+            border: 1.5px solid var(--navy);
+            border-radius: 6px;
             cursor: pointer;
             transition: all 0.2s ease;
         }
@@ -141,66 +190,73 @@
         }
 
         .footer-note {
-            margin-top: 40px;
+            margin-top: 35px;
             font-size: 0.85rem;
-            color: #8B93A5;
+            color: var(--gray);
         }
 
         @media print {
-            .export-btns, .footer-note { display: none; }
-            body { padding: 0; }
-            .qr-container { border-width: 30px; outline-width: 6px; }
+            .export-btns, .footer-note, .live-counter { display: none; }
+            body { padding: 0; background: #FFFFFF; }
+            .qr-container { border-width: 20px; outline-width: 6px; }
         }
     </style>
 </head>
 <body>
 
-    <h1 class="display-title" id="display-title">سجّل حضورك</h1>
-    <p class="display-subtitle" id="display-subtitle">امسح الرمز بكاميرا هاتفك</p>
+    <div class="header-badge">جامعة الفارابي — قسم هندسة الذكاء الاصطناعي</div>
+
+    <h1 class="display-title" id="display-title">محاضرة: AI Is Not As We Know It</h1>
+    <p class="display-subtitle" id="display-subtitle">البروفيسور الدكتور ضياء الجميلي (Liverpool John Moores University)</p>
+
+    <div class="venue-pill">
+        <span>📍 قاعة بابل</span>
+        <span>•</span>
+        <span>الاثنين 2026/11/2 — الساعة 10:00 صباحاً</span>
+    </div>
 
     <div class="qr-container">
         <canvas id="qr-canvas"></canvas>
     </div>
 
+    <p class="display-instruction">امسح الرمز بكاميرا هاتفك لتسجيل الحضور واستلام الشهادة</p>
     <p class="display-url" id="display-url"></p>
 
     <div class="live-counter" id="live-counter">
         <span class="counter-dot"></span>
-        <span>عدد المسجلين:</span>
+        <span>عدد الحاضرين المسجلين:</span>
         <span class="counter-number" id="counter-number">0</span>
     </div>
 
     <div class="export-btns">
-        <button class="export-btn" id="export-png" onclick="exportQR('png')">تصدير PNG</button>
-        <button class="export-btn" id="export-svg" onclick="exportQR('svg')">تصدير SVG</button>
+        <button class="export-btn" id="export-png" onclick="exportQR('png')">تصدير QR كصورة PNG</button>
+        <button class="export-btn" id="export-svg" onclick="exportQR('svg')">تصدير QR كمتجه SVG</button>
     </div>
 
-    <p class="footer-note">أداة تسجيل الفعاليات</p>
+    <p class="footer-note">نظام تسجيل الفعاليات — جامعة الفارابي</p>
 
-    <!-- QR Code Library (lightweight, ~12KB) -->
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <script>
-        // Configuration
-        const REGISTER_URL = window.location.origin + '/index.html?event=' + (new URLSearchParams(window.location.search).get('event') || 'default-event');
-        const SUPABASE_URL  = 'https://YOUR_PROJECT.supabase.co';
-        const SUPABASE_ANON = 'YOUR_ANON_KEY';
-        const EVENT_SLUG = new URLSearchParams(window.location.search).get('event') || 'default-event';
+        const SUPABASE_URL  = window.SUPABASE_URL || 'https://YOUR_PROJECT.supabase.co';
+        const SUPABASE_ANON = window.SUPABASE_ANON || 'YOUR_ANON_KEY';
+        const EVENT_SLUG = new URLSearchParams(window.location.search).get('event') || 'ai-lecture-2026';
 
-        // Display the URL
+        // Construct mobile registration URL
+        const basePath = window.location.pathname.replace(/display\.html$/i, '');
+        const REGISTER_URL = window.location.origin + basePath + 'index.html?event=' + encodeURIComponent(EVENT_SLUG);
         document.getElementById('display-url').textContent = REGISTER_URL;
 
-        // Generate QR
+        // Render high-contrast QR
         const canvas = document.getElementById('qr-canvas');
         QRCode.toCanvas(canvas, REGISTER_URL, {
-            width: canvas.clientWidth,
+            width: canvas.clientWidth || 360,
             margin: 2,
             color: { dark: '#0B132B', light: '#FFFFFF' },
             errorCorrectionLevel: 'H'
         }, function (err) {
-            if (err) console.error('QR generation error:', err);
+            if (err) console.error('QR rendering error:', err);
         });
 
-        // Export QR
         function exportQR(format) {
             if (format === 'png') {
                 const link = document.createElement('a');
@@ -224,28 +280,51 @@
             }
         }
 
-        // Live counter (polls every 10s)
+        // Live counter: Uses get_event_display RPC or fallback, polled every 8 seconds
         async function updateCounter() {
             try {
-                const res = await fetch(`${SUPABASE_URL}/rest/v1/registrations?event_id=eq.${EVENT_SLUG}&select=id`, {
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_event_display`, {
+                    method: 'POST',
                     headers: {
                         'apikey': SUPABASE_ANON,
                         'Authorization': `Bearer ${SUPABASE_ANON}`,
-                        'Prefer': 'count=exact'
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ p_event_slug: EVENT_SLUG })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && typeof data.total_registrations !== 'undefined') {
+                        document.getElementById('counter-number').textContent = data.total_registrations;
+                        if (data.name) document.getElementById('display-title').textContent = data.name;
+                        return;
+                    }
+                }
+
+                // Fallback to direct count header
+                const countRes = await fetch(`${SUPABASE_URL}/rest/v1/registrations?select=id`, {
+                    headers: {
+                        'apikey': SUPABASE_ANON,
+                        'Authorization': `Bearer ${SUPABASE_ANON}`,
+                        'Prefer': 'count=exact',
+                        'Range': '0-0'
                     }
                 });
-                const count = res.headers.get('content-range');
-                if (count) {
-                    const total = count.split('/')[1];
-                    document.getElementById('counter-number').textContent = total || '0';
+                const countRange = countRes.headers.get('content-range');
+                if (countRange) {
+                    const total = countRange.split('/')[1];
+                    if (total && total !== '*') {
+                        document.getElementById('counter-number').textContent = total;
+                    }
                 }
             } catch (e) {
-                console.warn('Counter update failed:', e);
+                console.warn('Counter fetch error:', e);
             }
         }
 
         updateCounter();
-        setInterval(updateCounter, 10000);
+        setInterval(updateCounter, 8000);
     </script>
 </body>
 </html>

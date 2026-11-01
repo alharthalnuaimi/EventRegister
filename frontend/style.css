@@ -876,3 +876,72 @@ body {
     background: var(--gray-600);
     border-radius: 3px;
 }
+
+
+/* ── Ticket Card Styles (Local Pass & Fast Verification) ─────── */
+.ticket-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+    margin: var(--space-md) 0;
+    text-align: right;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+[dir="ltr"] .ticket-card {
+    text-align: left;
+}
+
+.ticket-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--gold) 0%, #b89728 100%);
+    color: var(--navy);
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+    margin-bottom: var(--space-sm);
+}
+
+.ticket-card p {
+    margin: 6px 0;
+    font-size: var(--font-size-sm);
+    color: var(--gray-300);
+}
+
+.ticket-card strong {
+    color: var(--white);
+}
+
+.ticket-serial {
+    margin-top: var(--space-sm) !important;
+    padding-top: var(--space-xs);
+    border-top: 1px dashed rgba(255, 255, 255, 0.15);
+}
+
+.ticket-serial code {
+    background: rgba(0, 0, 0, 0.4);
+    padding: 2px 8px;
+    border-radius: 4px;
+    color: var(--gold);
+    font-family: monospace;
+    font-size: 0.95em;
+}
+
+.switch-user-btn {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--gray-300);
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-xs);
+    cursor: pointer;
+    margin-top: var(--space-sm);
+    transition: all 0.2s ease;
+}
+
+.switch-user-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--white);
+}
