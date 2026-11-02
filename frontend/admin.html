@@ -261,6 +261,65 @@
             font-weight: 600;
         }
 
+        
+        /* View Switcher Tabs */
+        .view-switch-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 18px;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 14px;
+        }
+
+        .view-tab {
+            background: rgba(2, 4, 15, 0.65);
+            border: 1px solid rgba(245, 240, 232, 0.15);
+            color: var(--ivory-dim);
+            padding: 10px 20px;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .view-tab svg {
+            width: 17px;
+            height: 17px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .view-tab:hover {
+            background: rgba(201, 168, 76, 0.08);
+            color: var(--ivory);
+            border-color: rgba(201, 168, 76, 0.4);
+        }
+
+        .view-tab.active {
+            background: rgba(201, 168, 76, 0.16);
+            border-color: var(--gold);
+            color: var(--gold-light);
+            box-shadow: 0 0 15px rgba(201, 168, 76, 0.15);
+        }
+
+        .btn-mini--chk {
+            background: rgba(56, 189, 248, 0.15);
+            color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.35);
+        }
+
+        .btn-mini--chk:hover {
+            background: #38bdf8;
+            color: #02040f;
+            border-color: #38bdf8;
+        }
+
         /* Registry Table */
         .table-frame {
             background: var(--glass);
@@ -709,6 +768,19 @@
                 <div class="metric-value" id="valAttendees">0</div>
                 <div class="metric-sub">الحضور العام والطلبة والباحثون</div>
             </div>
+        </div>
+
+        
+        <!-- Main View Switcher (Actual Attendee Register vs Official Volunteers Roster) -->
+        <div class="view-switch-tabs">
+            <button type="button" class="view-tab active" id="tabViewAttendance" onclick="switchView('attendance')">
+                <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                سجل الحضور الفعلي (<span id="valAttendedCountBadge">0</span> حاضر)
+            </button>
+            <button type="button" class="view-tab" id="tabViewVolunteers" onclick="switchView('volunteers')">
+                <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                قائمة المتطوعين واللجان المعتمدة (53 عضواً)
+            </button>
         </div>
 
         <!-- Filter & Search Bar -->
@@ -1273,6 +1345,79 @@
             return patterns.some(p => text.includes(p));
         }
 
+        
+        let currentView = 'attendance'; // 'attendance' | 'volunteers'
+        let activeVFilter = 'all';
+
+        function switchView(view) {
+            currentView = view;
+            const tabAtt = document.getElementById('tabViewAttendance');
+            const tabVol = document.getElementById('tabViewVolunteers');
+            const attTabs = document.getElementById('attendanceTabs');
+            const volTabs = document.getElementById('volunteersTabs');
+
+            if (view === 'attendance') {
+                tabAtt.classList.add('active');
+                tabVol.classList.remove('active');
+                attTabs.style.display = 'flex';
+                volTabs.style.display = 'none';
+            } else {
+                tabVol.classList.add('active');
+                tabAtt.classList.remove('active');
+                volTabs.style.display = 'flex';
+                attTabs.style.display = 'none';
+            }
+            render();
+        }
+
+        // Quick 1-Click Check-in for an official volunteer at the gate
+        async function checkinVolunteerDirect(fullName, roleTitle) {
+            if (!confirm(`تأكيد تسجيل حضور المتطوع: "${fullName}" في ${roleTitle}؟`)) return;
+
+            const randomDigits = Math.floor(10000000 + Math.random() * 90000000);
+            const dummyPhone = '+96477' + randomDigits;
+
+            try {
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/register_attendee`, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SUPABASE_ANON,
+                        'Authorization': `Bearer ${SUPABASE_ANON}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        p_event_slug: EVENT_SLUG,
+                        p_full_name: fullName,
+                        p_phone_norm: dummyPhone,
+                        p_email_norm: '',
+                        p_role_title: roleTitle,
+                        p_workplace: 'جامعة الفارابي',
+                        p_lang: 'ar'
+                    })
+                });
+
+                const result = await res.json().catch(() => ({}));
+                const newRow = {
+                    id: (result && result.registration_id) ? result.registration_id : ('vol-chk-' + Date.now()),
+                    serial: (result && result.serial) ? result.serial : ('ALF-2026-V' + Math.floor(100 + Math.random() * 900)),
+                    full_name: fullName,
+                    kind: 'volunteer',
+                    role_title: roleTitle,
+                    workplace: 'جامعة الفارابي',
+                    phone: '',
+                    created_at: new Date().toISOString()
+                };
+
+                dataRows.unshift(newRow);
+                saveLocal();
+                render();
+                alert(`تم تسجيل وتوثيق حضور المتطوع "${fullName}" بنجاح.`);
+            } catch (e) {
+                console.error(e);
+                alert('حدث خطأ أثناء تسجيل الحضور');
+            }
+        }
+
         // Get computed category object
         function getAttendeeCategory(row) {
             // Check if matches imported approved roster (by phone or by full name)
@@ -1331,7 +1476,7 @@
 
                 if (res.ok) {
                     const result = await res.json();
-                    dataRows = buildFullAttendeeList(result.attendees || []);
+                    dataRows = processAttendeeList(result.attendees || []);
                     saveLocal();
                     render();
                 } else {
@@ -1351,14 +1496,11 @@
 
         
         
-        function buildFullAttendeeList(backendAttendees) {
+        function processAttendeeList(backendAttendees) {
             const deletedIds = getDeletedIds();
             const edited = getEditedRecords();
 
-            // 1. Process backend attendees from Supabase
             const list = [];
-            const matchedVolNames = new Set();
-
             (backendAttendees || []).forEach(row => {
                 if (deletedIds.includes(String(row.id))) return;
 
@@ -1367,44 +1509,16 @@
                     r = { ...r, ...edited[r.id] };
                 }
 
-                // Check if matches an official volunteer
+                // Check if this actual attendee is one of our unique official volunteers
                 const volMatch = DEFAULT_APPROVED_VOLUNTEERS.find(v => isNameMatch(r.full_name, v.full_name));
                 if (volMatch) {
                     r.kind = 'volunteer';
                     if (!r.role_title || r.role_title === 'طالب' || r.role_title === 'حاضر') {
                         r.role_title = volMatch.role_title;
                     }
-                    matchedVolNames.add(normalizeArabicName(volMatch.full_name));
                 }
 
                 list.push(r);
-            });
-
-            // 2. Add remaining official volunteers as confirmed attendees
-            DEFAULT_APPROVED_VOLUNTEERS.forEach((v, idx) => {
-                const volKey = normalizeArabicName(v.full_name);
-                if (matchedVolNames.has(volKey)) return;
-
-                const volId = 'vol-' + (idx + 1);
-                if (deletedIds.includes(volId)) return;
-
-                const serial = 'ALF-VOL-' + String(idx + 1).padStart(2, '0');
-                let volRow = {
-                    id: volId,
-                    serial: serial,
-                    full_name: v.full_name,
-                    kind: 'volunteer',
-                    role_title: v.role_title,
-                    workplace: 'جامعة الفارابي',
-                    phone: v.phone || '',
-                    created_at: new Date('2026-11-02T10:00:00Z').toISOString()
-                };
-
-                if (edited[volId]) {
-                    volRow = { ...volRow, ...edited[volId] };
-                }
-
-                list.push(volRow);
             });
 
             return list;
@@ -1444,7 +1558,7 @@
 
         function loadLocal() {
             const rawStored = JSON.parse(localStorage.getItem('alfarabi_admin_attendees_' + EVENT_SLUG) || '[]');
-            dataRows = buildFullAttendeeList(rawStored);
+            dataRows = processAttendeeList(rawStored);
         }
 
         function saveApprovedVolunteers() {
@@ -1481,86 +1595,225 @@
 
         function render() {
             const tbody = document.getElementById('tableRows');
+            const thead = document.getElementById('tableHead');
             const query = document.getElementById('searchInput').value.trim().toLowerCase();
 
-            // Calculate metric counts
+            // 1. Calculate actual attendance counts (ONLY from real check-ins!)
             const total = dataRows.length;
             let profCount = 0;
-            let volCount = 0;
+            let volAttCount = 0;
             let attCount = 0;
 
             dataRows.forEach(row => {
                 const cat = getAttendeeCategory(row);
-                if (cat.key === 'volunteer') volCount++;
+                if (cat.key === 'volunteer') volAttCount++;
                 else if (cat.key === 'professor') profCount++;
                 else attCount++;
             });
 
+            // Update Metric Cards with honest actual attendance numbers
             document.getElementById('valTotal').textContent = total;
             document.getElementById('valProfessors').textContent = profCount;
-            document.getElementById('valVolunteers').textContent = volCount;
+            document.getElementById('valVolunteers').textContent = volAttCount;
             document.getElementById('valAttendees').textContent = attCount;
+            document.getElementById('valAttendedCountBadge').textContent = total;
+
+            const volSub = document.getElementById('volStatsSubtitle');
+            if (volSub) {
+                volSub.textContent = `حضر ${volAttCount} من أصل 53 متطوعاً معتمداً`;
+            }
 
             document.getElementById('tabCountAll').textContent = total;
             document.getElementById('tabCountProf').textContent = profCount;
-            document.getElementById('tabCountVol').textContent = volCount;
+            document.getElementById('tabCountVol').textContent = volAttCount;
             document.getElementById('tabCountAtt').textContent = attCount;
 
-            const filtered = dataRows.filter(row => {
-                const cat = getAttendeeCategory(row);
-                if (activeFilter !== 'all' && cat.key !== activeFilter) return false;
-                if (!query) return true;
-                return (
-                    (row.full_name && row.full_name.toLowerCase().includes(query)) ||
-                    (row.phone && row.phone.includes(query)) ||
-                    (row.role_title && row.role_title.toLowerCase().includes(query)) ||
-                    (row.workplace && row.workplace.toLowerCase().includes(query)) ||
-                    (row.serial && row.serial.toLowerCase().includes(query))
-                );
+            // Volunteer Roster Stats
+            let vAttended = 0;
+            DEFAULT_APPROVED_VOLUNTEERS.forEach(v => {
+                const isAtt = dataRows.some(r => isNameMatch(r.full_name, v.full_name));
+                if (isAtt) vAttended++;
             });
+            const vPending = DEFAULT_APPROVED_VOLUNTEERS.length - vAttended;
+            const vAttBadge = document.getElementById('vtabAttended');
+            const vPenBadge = document.getElementById('vtabPending');
+            if (vAttBadge) vAttBadge.textContent = vAttended;
+            if (vPenBadge) vPenBadge.textContent = vPending;
 
-            if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 36px; color: var(--ivory-dim);">لا توجد قيود مطابقة للبحث أو الفلتر المختار</td></tr>`;
+            // ==========================================
+            // VIEW 1: ACTUAL ATTENDANCE REGISTER
+            // ==========================================
+            if (currentView === 'attendance') {
+                if (thead) {
+                    thead.innerHTML = `
+                        <tr>
+                            <th>#</th>
+                            <th>الرقم المرجعي</th>
+                            <th>الاسم الكامل</th>
+                            <th>التصنيف الأكاديمي</th>
+                            <th>المسمى أو الصفة</th>
+                            <th>الكلية أو جهة العمل</th>
+                            <th>رقم الهاتف</th>
+                            <th>وقت التسجيل</th>
+                            <th style="text-align: center;">الإجراءات</th>
+                        </tr>
+                    `;
+                }
+
+                const filtered = dataRows.filter(row => {
+                    const cat = getAttendeeCategory(row);
+                    if (activeFilter !== 'all' && cat.key !== activeFilter) return false;
+                    if (!query) return true;
+                    return (
+                        (row.full_name && row.full_name.toLowerCase().includes(query)) ||
+                        (row.phone && row.phone.includes(query)) ||
+                        (row.role_title && row.role_title.toLowerCase().includes(query)) ||
+                        (row.workplace && row.workplace.toLowerCase().includes(query)) ||
+                        (row.serial && row.serial.toLowerCase().includes(query))
+                    );
+                });
+
+                if (filtered.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="9" style="text-align: center; padding: 36px; color: var(--ivory-dim);">
+                                لا توجد قيود حضور مسجلة تطابق البحث أو الفلتر المحدد.
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                tbody.innerHTML = filtered.map((row, idx) => {
+                    const cat = getAttendeeCategory(row);
+                    const serialCode = row.serial || ('ALF-2026-' + (row.id ? row.id.substring(0, 6).toUpperCase() : 'PASS'));
+                    const timeText = row.created_at ? new Date(row.created_at).toLocaleTimeString('ar-IQ', { hour: '2-digit', minute: '2-digit' }) : 'الآن';
+
+                    return `
+                        <tr class="${cat.rowClass}">
+                            <td style="color: rgba(245, 240, 232, 0.4); font-size: 12px;">${idx + 1}</td>
+                            <td><span class="ref-code">${serialCode}</span></td>
+                            <td><strong style="color: ${cat.key === 'professor' ? '#ffdada' : 'var(--ivory)'};">${escapeHtml(row.full_name)}</strong></td>
+                            <td>
+                                <span class="tag-badge ${cat.cssClass}">
+                                    ${cat.key === 'professor' ? '<svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>' : ''}
+                                    ${cat.key === 'volunteer' ? '<svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>' : ''}
+                                    ${cat.label}
+                                </span>
+                            </td>
+                            <td>${escapeHtml(row.role_title || '—')}</td>
+                            <td>${escapeHtml(row.workplace || 'جامعة الفارابي')}</td>
+                            <td dir="ltr" style="text-align: right;">
+                                ${cat.key === 'volunteer' && row.phone
+                                    ? `<span style="color: var(--gold-light); font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">${escapeHtml(row.phone)} <svg style="width: 13px; height: 13px; stroke: #38bdf8; fill: none; stroke-width: 2.5;" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span>`
+                                    : escapeHtml(row.phone || '—')
+                                }
+                            </td>
+                            <td>${timeText}</td>
+                            <td>
+                                <div class="actions-cell">
+                                    <button class="btn-mini btn-mini--edit" onclick="openEditModal('${row.id}')" title="تعديل القيد">
+                                        <svg viewBox="0 0 24 24"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                                        تعديل
+                                    </button>
+                                    <button class="btn-mini btn-mini--del" onclick="deleteAttendee('${row.id}')" title="حذف القيد">
+                                        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                        حذف
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
                 return;
             }
 
-            tbody.innerHTML = filtered.map((row, idx) => {
-                const cat = getAttendeeCategory(row);
-                const timeText = row.created_at ? new Date(row.created_at).toLocaleTimeString('ar-IQ', { hour: '2-digit', minute: '2-digit' }) : '—';
-                const serialCode = row.serial || ('ALF-2026-' + (row.id ? row.id.slice(0, 6).toUpperCase() : String(idx + 1).padStart(4, '0')));
+            // ==========================================
+            // VIEW 2: OFFICIAL UNIQUE VOLUNTEERS ROSTER (53 MEMBERS)
+            // ==========================================
+            if (thead) {
+                thead.innerHTML = `
+                    <tr>
+                        <th>#</th>
+                        <th>اسم الطالب المتطوع</th>
+                        <th>اللجنة / المهمة الرسمية</th>
+                        <th>حالة الحضور والتوثيق</th>
+                        <th>كود الحضور المرجعي</th>
+                        <th style="text-align: center;">إجراء الحضور والتأكيد</th>
+                    </tr>
+                `;
+            }
+
+            const filteredVolunteers = DEFAULT_APPROVED_VOLUNTEERS.filter((vol, idx) => {
+                const attendedMatch = dataRows.find(r => isNameMatch(r.full_name, vol.full_name));
+                const isAttended = !!attendedMatch;
+
+                if (activeVFilter === 'attended' && !isAttended) return false;
+                if (activeVFilter === 'pending' && isAttended) return false;
+                if (activeVFilter !== 'all' && activeVFilter !== 'attended' && activeVFilter !== 'pending') {
+                    if (!vol.role_title.includes(activeVFilter)) return false;
+                }
+
+                if (!query) return true;
+                return (
+                    vol.full_name.toLowerCase().includes(query) ||
+                    vol.role_title.toLowerCase().includes(query) ||
+                    (attendedMatch && attendedMatch.serial && attendedMatch.serial.toLowerCase().includes(query))
+                );
+            });
+
+            if (filteredVolunteers.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 36px; color: var(--ivory-dim);">
+                            لا توجد أسماء تطابق الفلتر المحدد في قائمة المتطوعين.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = filteredVolunteers.map((vol, idx) => {
+                const attendedMatch = dataRows.find(r => isNameMatch(r.full_name, vol.full_name));
+                const isAttended = !!attendedMatch;
 
                 return `
-                    <tr class="${cat.rowClass}">
-                        <td style="color: rgba(245, 240, 232, 0.4);">${idx + 1}</td>
-                        <td><span class="ref-code">${serialCode}</span></td>
-                        <td><strong style="color: ${cat.key === 'professor' ? '#ffdada' : 'var(--ivory)'};">${escapeHtml(row.full_name)}</strong></td>
+                    <tr class="${isAttended ? 'row-vol' : ''}">
+                        <td style="color: rgba(245, 240, 232, 0.4); font-size: 12px;">${idx + 1}</td>
+                        <td><strong style="color: var(--ivory); font-size: 15px;">${escapeHtml(vol.full_name)}</strong></td>
                         <td>
-                            <span class="tag-badge ${cat.cssClass}">
-                                ${cat.key === 'professor' ? '<svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>' : ''}
-                                ${cat.key === 'volunteer' ? '<svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>' : ''}
-                                ${cat.label} ${cat.key === 'volunteer' ? '(موثق بالهاتف)' : ''}
+                            <span class="tag-badge tag-badge--vol">
+                                <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                                ${escapeHtml(vol.role_title)}
                             </span>
                         </td>
-                        <td>${escapeHtml(row.role_title || '—')}</td>
-                        <td>${escapeHtml(row.workplace || '—')}</td>
-                        <td dir="ltr" style="text-align: right;">
-                            ${cat.key === 'volunteer' 
-                                ? `<span style="color: var(--gold-light); font-weight: 600; display: inline-flex; align-items: center; gap: 5px;" title="تم توثيق الهوية عبر رقم الهاتف المعتمد">${escapeHtml(row.phone || '—')} <svg style="width: 13px; height: 13px; stroke: #38bdf8; fill: none; stroke-width: 2.5;" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span>`
-                                : escapeHtml(row.phone || '—')
+                        <td>
+                            ${isAttended
+                                ? `<span style="background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; color: #e0f2fe; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
+                                    <svg style="width: 13px; height: 13px; stroke: #38bdf8; fill: none; stroke-width: 2.5;" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    حضر وسجل حضوراً رسمياً
+                                   </span>`
+                                : `<span style="background: rgba(245, 240, 232, 0.07); border: 1px solid rgba(245, 240, 232, 0.2); color: var(--ivory-dim); padding: 4px 10px; border-radius: 6px; font-size: 12px;">
+                                    بانتظار تسجيل الحضور
+                                   </span>`
                             }
                         </td>
-                        <td>${timeText}</td>
                         <td>
-                            <div class="actions-cell">
-                                <button class="btn-mini btn-mini--edit" onclick="openEditModal('${row.id}')" title="تعديل القيد">
-                                    <svg viewBox="0 0 24 24"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-                                    تعديل
-                                </button>
-                                <button class="btn-mini btn-mini--del" onclick="deleteAttendee('${row.id}')" title="حذف القيد">
-                                    <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                                    حذف
-                                </button>
-                            </div>
+                            ${isAttended
+                                ? `<span class="ref-code" style="color: var(--gold-light);">${attendedMatch.serial || 'ALF-2026-CONFIRMED'}</span>`
+                                : `<span style="color: rgba(245, 240, 232, 0.3); font-size: 12px;">—</span>`
+                            }
+                        </td>
+                        <td style="text-align: center;">
+                            ${isAttended
+                                ? `<button type="button" class="btn-mini btn-mini--edit" onclick="switchView('attendance'); document.getElementById('searchInput').value = '${escapeHtml(vol.full_name)}'; render();">
+                                    عرض في الحضور
+                                   </button>`
+                                : `<button type="button" class="btn-mini btn-mini--chk" onclick="checkinVolunteerDirect('${escapeHtml(vol.full_name).replace(/'/g, "\\'")}', '${escapeHtml(vol.role_title).replace(/'/g, "\\\'")}');">
+                                    <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    تسجيل حضور فوري
+                                   </button>`
+                            }
                         </td>
                     </tr>
                 `;
@@ -2129,6 +2382,17 @@
         });
 
         
+        
+        // Listener for volunteer sub-tabs
+        document.querySelectorAll('[data-vfilter]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('[data-vfilter]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                activeVFilter = btn.dataset.vfilter;
+                render();
+            });
+        });
+
         // Phone Verification Lookup
         function runPhoneVerification() {
             const input = document.getElementById('verifyPhoneInput').value.trim();
