@@ -963,16 +963,22 @@
             <h3>سجل متابعة الأسماء المهمة وفريق التنظيم المعتمد</h3>
             <p>قائمة الأعضاء المعتمدين لمتابعة من حضر وسجل رسمياً ومن لم يسجل بعد.</p>
 
-            <div style="display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;">
-                <div style="background: rgba(201, 168, 76, 0.15); border: 1px solid var(--gold); border-radius: 6px; padding: 6px 14px; font-size: 13px;">
-                    إجمالي المعتمدين: <strong id="rosterTotalCount">0</strong>
+            <div style="display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; justify-content: space-between;">
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <div style="background: rgba(201, 168, 76, 0.15); border: 1px solid var(--gold); border-radius: 6px; padding: 6px 14px; font-size: 13px;">
+                        إجمالي المعتمدين: <strong id="rosterTotalCount">0</strong>
+                    </div>
+                    <div style="background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; border-radius: 6px; padding: 6px 14px; font-size: 13px;">
+                        حضر وسجل: <strong id="rosterAttendedCount">0</strong>
+                    </div>
+                    <div style="background: rgba(245, 240, 232, 0.08); border: 1px solid rgba(245, 240, 232, 0.2); border-radius: 6px; padding: 6px 14px; font-size: 13px;">
+                        بانتظار الحضور: <strong id="rosterPendingCount">0</strong>
+                    </div>
                 </div>
-                <div style="background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; border-radius: 6px; padding: 6px 14px; font-size: 13px;">
-                    حضر وسجل: <strong id="rosterAttendedCount">0</strong>
-                </div>
-                <div style="background: rgba(245, 240, 232, 0.08); border: 1px solid rgba(245, 240, 232, 0.2); border-radius: 6px; padding: 6px 14px; font-size: 13px;">
-                    بانتظار الحضور: <strong id="rosterPendingCount">0</strong>
-                </div>
+                <button type="button" class="btn-adm btn-adm--danger" onclick="resetApprovedVolunteers()" style="padding: 6px 12px; font-size: 12px; border: 1px solid rgba(220, 38, 38, 0.4); background: rgba(220, 38, 38, 0.15); color: #fca5a5; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                    <svg style="width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2;" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    تنظيف وإعادة ضبط القائمة (53)
+                </button>
             </div>
 
             <div style="max-height: 340px; overflow-y: auto; border: 1px solid var(--glass-border); border-radius: var(--radius-sm);">
@@ -981,13 +987,14 @@
                         <tr>
                             <th>#</th>
                             <th>الاسم الكامل</th>
-                            <th>المسمى</th>
+                            <th>المسمى / اللجنة</th>
                             <th>الهاتف</th>
                             <th style="text-align: center;">حالة الحضور</th>
+                            <th style="text-align: center;">إجراء</th>
                         </tr>
                     </thead>
                     <tbody id="rosterTableRows">
-                        <tr><td colspan="5" style="text-align: center; padding: 24px; color: var(--ivory-dim);">لم يتم استيراد أي عضو في فريق التنظيم بعد.</td></tr>
+                        <tr><td colspan="6" style="text-align: center; padding: 24px; color: var(--ivory-dim);">لم يتم استيراد أي عضو في فريق التنظيم بعد.</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -1510,7 +1517,7 @@
                 }
 
                 // Check if this actual attendee is one of our unique official volunteers
-                const volMatch = DEFAULT_APPROVED_VOLUNTEERS.find(v => isNameMatch(r.full_name, v.full_name));
+                const volMatch = approvedVolunteers.find(v => isNameMatch(r.full_name, v.full_name));
                 if (volMatch) {
                     r.kind = 'volunteer';
                     if (!r.role_title || r.role_title === 'طالب' || r.role_title === 'حاضر') {
@@ -1566,26 +1573,77 @@
             updateRosterBadgeCount();
         }
 
+        function sanitizeVolunteerList(list) {
+            if (!Array.isArray(list)) return [];
+            const invalidKeywords = [
+                'ت', 'تسلسل', 'التسلسل', 'الإجمالي', 'المجموع', 'المهمة', 'اللجنة', 
+                'ملخص', 'النسبة', 'المئوية', 'حاضر', 'غائب', 'حالة', 'ملاحظات', 
+                'عدد', 'المتطوعين', 'تخصيص', 'الاسم', 'الهاتف', 'المعتمد'
+            ];
+            return list.filter(v => {
+                if (!v || !v.full_name) return false;
+                const name = String(v.full_name).trim();
+                // Reject pure numeric values e.g. "22", "23"
+                if (/^\d+$/.test(name)) return false;
+                // Names must be at least 3 characters
+                if (name.length < 3) return false;
+                // Reject header or summary keywords
+                if (invalidKeywords.includes(name)) return false;
+                // Normalize role_title if it was mistakenly set to "حاضر" or status
+                if (!v.role_title || v.role_title === 'حاضر' || v.role_title === 'غير محددة' || v.role_title.includes('%')) {
+                    v.role_title = 'فريق التنظيم المعتمد';
+                }
+                return true;
+            });
+        }
+
         function loadApprovedVolunteers() {
-            const stored = JSON.parse(localStorage.getItem('alfarabi_approved_volunteers_' + EVENT_SLUG) || 'null');
+            let stored = null;
+            try {
+                stored = JSON.parse(localStorage.getItem('alfarabi_approved_volunteers_' + EVENT_SLUG) || 'null');
+            } catch (e) {
+                stored = null;
+            }
+
+            const map = new Map();
+            DEFAULT_APPROVED_VOLUNTEERS.forEach(v => {
+                map.set(normalizeArabicName(v.full_name), { ...v });
+            });
+
             if (stored && Array.isArray(stored) && stored.length > 0) {
-                // Ensure all default 53 volunteers are present
-                const map = new Map();
-                DEFAULT_APPROVED_VOLUNTEERS.forEach(v => map.set(normalizeArabicName(v.full_name), { ...v }));
-                stored.forEach(v => {
+                const cleanStored = sanitizeVolunteerList(stored);
+                cleanStored.forEach(v => {
                     const key = normalizeArabicName(v.full_name);
                     if (map.has(key)) {
                         map.set(key, { ...map.get(key), ...v });
-                    } else {
-                        map.set(key || v.phone || Math.random().toString(), v);
+                    } else if (key && !/^\d+$/.test(key) && key.length >= 3) {
+                        map.set(key, v);
                     }
                 });
-                approvedVolunteers = Array.from(map.values());
-            } else {
-                approvedVolunteers = DEFAULT_APPROVED_VOLUNTEERS.map(v => ({ ...v }));
-                saveApprovedVolunteers();
             }
+
+            approvedVolunteers = sanitizeVolunteerList(Array.from(map.values()));
+            saveApprovedVolunteers();
             updateRosterBadgeCount();
+        }
+
+        function removeApprovedVolunteer(name) {
+            if (!confirm(`هل أنت متأكد من حذف "${name}" من قائمة فريق التنظيم المعتمد؟`)) return;
+            approvedVolunteers = approvedVolunteers.filter(v => v.full_name !== name);
+            saveApprovedVolunteers();
+            openRosterModal();
+            render();
+        }
+
+        function resetApprovedVolunteers() {
+            if (!confirm('هل تريد بالتأكيد تنظيف قائمة فريق التنظيم وحذف أي قيم فارغة أو أرقام خاطئة واستعادة القائمة الرسمية المعتمدة (53 عضواً)؟')) {
+                return;
+            }
+            approvedVolunteers = DEFAULT_APPROVED_VOLUNTEERS.map(v => ({ ...v }));
+            saveApprovedVolunteers();
+            openRosterModal();
+            render();
+            alert('تم تنظيف القائمة واستعادة الـ 53 عضواً المعتمدين بنجاح!');
         }
 
         function updateRosterBadgeCount() {
@@ -1630,11 +1688,11 @@
 
             // Volunteer Roster Stats
             let vAttended = 0;
-            DEFAULT_APPROVED_VOLUNTEERS.forEach(v => {
+            approvedVolunteers.forEach(v => {
                 const isAtt = dataRows.some(r => isNameMatch(r.full_name, v.full_name));
                 if (isAtt) vAttended++;
             });
-            const vPending = DEFAULT_APPROVED_VOLUNTEERS.length - vAttended;
+            const vPending = approvedVolunteers.length - vAttended;
             const vAttBadge = document.getElementById('vtabAttended');
             const vPenBadge = document.getElementById('vtabPending');
             if (vAttBadge) vAttBadge.textContent = vAttended;
@@ -1744,7 +1802,7 @@
                 `;
             }
 
-            const filteredVolunteers = DEFAULT_APPROVED_VOLUNTEERS.filter((vol, idx) => {
+            const filteredVolunteers = approvedVolunteers.filter((vol, idx) => {
                 const attendedMatch = dataRows.find(r => isNameMatch(r.full_name, vol.full_name));
                 const isAttended = !!attendedMatch;
 
@@ -2068,16 +2126,39 @@
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const text = e.target.result;
-                    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                    const rawLines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
                     const formatted = [];
-                    lines.forEach(line => {
-                        const parts = line.split(/[,;\t]/).map(p => p.trim()).filter(Boolean);
-                        if (parts.length === 1) {
-                            formatted.push(parts[0]);
-                        } else if (parts.length === 2) {
-                            formatted.push(`${parts[0]}, ${parts[1]}`);
-                        } else if (parts.length >= 3) {
-                            formatted.push(`${parts[0]}, ${parts[1]}, ${parts[2]}`);
+                    const summaryWords = ['الإجمالي', 'المجموع', 'المهمة', 'اللجنة', 'النسبة', 'ملخص', 'عدد', 'التسلسل', 'الاسم'];
+
+                    rawLines.forEach(line => {
+                        let parts = line.split(/[,;\t]/).map(p => p.trim()).filter(Boolean);
+                        if (parts.length === 0) return;
+
+                        // If col 0 is a sequence number like 1, 2, 22, shift it
+                        if (/^\d+$/.test(parts[0])) {
+                            parts.shift();
+                        }
+                        if (parts.length === 0) return;
+
+                        const name = parts[0];
+                        if (/^\d+$/.test(name) || name.length < 3) return;
+                        if (summaryWords.some(w => name.includes(w))) return;
+
+                        let role = parts[1] || 'فريق التنظيم';
+                        if (role === 'حاضر' || role === 'غير محددة' || role.includes('%')) {
+                            role = 'فريق التنظيم';
+                        }
+
+                        let phone = '';
+                        if (parts.length >= 3) {
+                            const digits = parts[2].replace(/[^\d]/g, '');
+                            if (digits.length >= 7) phone = parts[2];
+                        }
+
+                        if (phone) {
+                            formatted.push(`${name}, ${phone}, ${role}`);
+                        } else {
+                            formatted.push(`${name}, ${role}`);
                         }
                     });
                     document.getElementById('importText').value = formatted.join('\n');
@@ -2092,46 +2173,63 @@
 
             let startIdx = 0;
             const firstRow = rows[0].map(c => String(c || '').trim().toLowerCase());
-            const hasHeader = firstRow.some(c => c.includes('اسم') || c.includes('name') || c.includes('هاتف') || c.includes('phone') || c.includes('صفة') || c.includes('مسمى') || c.includes('دور') || c.includes('قسم'));
+            const hasHeader = firstRow.some(c => 
+                c.includes('اسم') || c.includes('name') || 
+                c.includes('هاتف') || c.includes('phone') || 
+                c.includes('صفة') || c.includes('مسمى') || 
+                c.includes('لجنة') || c.includes('مهمة') || c.includes('دور')
+            );
             if (hasHeader) startIdx = 1;
 
-            let nameCol = 0, phoneCol = -1, roleCol = -1;
+            let nameCol = -1, phoneCol = -1, roleCol = -1;
             if (hasHeader) {
                 firstRow.forEach((h, i) => {
-                    if (h.includes('اسم') || h.includes('name')) nameCol = i;
-                    else if (h.includes('هاتف') || h.includes('phone') || h.includes('موبايل') || h.includes('رقم')) phoneCol = i;
-                    else if (h.includes('صفة') || h.includes('مسمى') || h.includes('دور') || h.includes('role') || h.includes('title') || h.includes('قسم')) roleCol = i;
+                    if (h === 'ت' || h.includes('تسلسل') || h === 'no' || h === 'id' || h === '#') return;
+                    if (nameCol === -1 && (h.includes('اسم') || h.includes('name') || h.includes('طالب') || h.includes('عضو'))) {
+                        nameCol = i;
+                    } else if (phoneCol === -1 && (h.includes('هاتف') || h.includes('phone') || h.includes('موبايل') || h.includes('رقم'))) {
+                        phoneCol = i;
+                    } else if (roleCol === -1 && (h.includes('لجنة') || h.includes('مهمة') || h.includes('صفة') || h.includes('دور') || h.includes('مسمى'))) {
+                        roleCol = i;
+                    }
                 });
-            } else {
-                if (rows[0] && rows[0].length >= 2) {
-                    const val1 = String(rows[0][1] || '').trim();
-                    if (val1.match(/\d{6,}/)) phoneCol = 1;
-                    else roleCol = 1;
-                }
-                if (rows[0] && rows[0].length >= 3) {
-                    if (phoneCol === 1) roleCol = 2;
-                    else phoneCol = 2;
+            }
+
+            if (nameCol === -1) {
+                const firstDataRow = rows[startIdx] || [];
+                if (firstDataRow[0] && String(firstDataRow[0]).trim().match(/^\d+$/)) {
+                    nameCol = 1;
+                    roleCol = (firstDataRow.length > 2) ? 2 : -1;
+                } else {
+                    nameCol = 0;
+                    roleCol = (firstDataRow.length > 1) ? 1 : -1;
                 }
             }
 
             const lines = [];
+            const summaryWords = ['الإجمالي', 'المجموع', 'المهمة', 'اللجنة', 'النسبة', 'ملخص', 'عدد', 'حاضر'];
+
             for (let i = startIdx; i < rows.length; i++) {
                 const row = rows[i];
                 if (!row || row.length === 0) continue;
-                const name = String(row[nameCol] || '').trim();
-                if (!name) continue;
+                const rawName = String(row[nameCol] || '').trim();
+                if (!rawName || /^\d+$/.test(rawName) || rawName.length < 3) continue;
+                if (summaryWords.some(w => rawName.includes(w))) continue;
 
-                const phone = phoneCol >= 0 ? String(row[phoneCol] || '').trim() : '';
-                const role = roleCol >= 0 ? String(row[roleCol] || '').trim() : '';
+                let rawRole = roleCol >= 0 ? String(row[roleCol] || '').trim() : '';
+                if (!rawRole || rawRole === 'حاضر' || rawRole === 'غير محددة' || rawRole.includes('%')) {
+                    rawRole = 'فريق التنظيم';
+                }
 
-                if (phone && role) {
-                    lines.push(`${name}, ${phone}, ${role}`);
-                } else if (role) {
-                    lines.push(`${name}, ${role}`);
-                } else if (phone) {
-                    lines.push(`${name}, ${phone}`);
+                let rawPhone = phoneCol >= 0 ? String(row[phoneCol] || '').trim() : '';
+                if (rawPhone && !rawPhone.match(/\d{7,}/)) rawPhone = '';
+
+                if (rawPhone && rawRole) {
+                    lines.push(`${rawName}, ${rawPhone}, ${rawRole}`);
+                } else if (rawRole) {
+                    lines.push(`${rawName}, ${rawRole}`);
                 } else {
-                    lines.push(name);
+                    lines.push(rawName);
                 }
             }
 
@@ -2156,20 +2254,31 @@
             const lines = raw.split('\n');
             const volunteers = [];
 
+            const summaryWords = ['الإجمالي', 'المجموع', 'المهمة', 'اللجنة', 'النسبة', 'ملخص', 'عدد', 'التسلسل', 'الاسم', 'حاضر'];
+
             for (const line of lines) {
-                const parts = line.split(/[,،;\t]/).map(s => s.trim()).filter(Boolean);
+                let parts = line.split(/[,،;\t]/).map(s => s.trim()).filter(Boolean);
+                if (parts.length === 0) continue;
+
+                // Strip leading index number if present e.g. "22"
+                if (/^\d+$/.test(parts[0])) {
+                    parts.shift();
+                }
                 if (parts.length === 0) continue;
 
                 const name = parts[0];
+                if (/^\d+$/.test(name) || name.length < 3) continue;
+                if (summaryWords.some(w => name.includes(w))) continue;
+
                 let phone = '';
-                let role = 'فريق التنظيم';
+                let role = 'فريق التنظيم المعتمد';
 
                 for (let p = 1; p < parts.length; p++) {
                     const val = parts[p];
                     const digits = val.replace(/[^\d]/g, '');
                     if (digits.length >= 7) {
                         phone = normalizePhone(val);
-                    } else if (val) {
+                    } else if (val && val !== 'حاضر' && val !== 'غير محددة' && !val.includes('%')) {
                         role = val;
                     }
                 }
@@ -2212,11 +2321,12 @@
                 if (existing) {
                     existing.full_name = v.full_name;
                     if (v.phone) existing.phone = v.phone;
-                    if (v.role_title) existing.role_title = v.role_title;
+                    if (v.role_title && v.role_title !== 'حاضر') existing.role_title = v.role_title;
                 } else {
                     approvedVolunteers.push(v);
                 }
             });
+            approvedVolunteers = sanitizeVolunteerList(approvedVolunteers);
             saveApprovedVolunteers();
 
             // 3. Highlight any matching attendees WHO ALREADY REGISTERED (by phone or by name)
@@ -2274,17 +2384,33 @@
                 if (hasAttended) attendedCount++;
                 else pendingCount++;
 
+                const cleanName = escapeHtml(vol.full_name);
+                const safeName = cleanName.replace(/'/g, "\\'");
+                const cleanRole = escapeHtml(vol.role_title || 'فريق التنظيم');
+                const safeRole = cleanRole.replace(/'/g, "\\'");
+
                 return `
                     <tr>
                         <td style="color: rgba(245, 240, 232, 0.4); font-size: 12px;">${idx + 1}</td>
-                        <td><strong>${escapeHtml(vol.full_name)}</strong></td>
-                        <td><span style="color: var(--gold-light);">${escapeHtml(vol.role_title || 'فريق التنظيم')}</span></td>
+                        <td><strong>${cleanName}</strong></td>
+                        <td><span style="color: var(--gold-light);">${cleanRole}</span></td>
                         <td dir="ltr" style="text-align: right; color: var(--ivory-dim); font-size: 12px;">${vol.phone ? escapeHtml(vol.phone) : '— (غير محدد)'}</td>
                         <td style="text-align: center;">
                             ${hasAttended
                                 ? `<span class="status-pill status-pill--attended">حضر وسجل (${match.serial || 'مسجل'})</span>`
                                 : `<span class="status-pill status-pill--pending">بانتظار الحضور والتسجيل</span>`
                             }
+                        </td>
+                        <td style="text-align: center; white-space: nowrap;">
+                            ${!hasAttended ? `
+                                <button type="button" class="btn-mini btn-mini--chk" onclick="checkinVolunteerDirect('${safeName}', '${safeRole}')" title="تسجيل حضور فوري" style="margin-left: 4px;">
+                                    <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    تسجيل
+                                </button>
+                            ` : ''}
+                            <button type="button" class="btn-mini btn-mini--del" onclick="removeApprovedVolunteer('${safeName}')" title="حذف من قائمة المعتمدين">
+                                <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            </button>
                         </td>
                     </tr>
                 `;

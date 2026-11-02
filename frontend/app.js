@@ -3,8 +3,8 @@
  * Clean, fast, phone-deduplicated attendance logging
  */
 
-const SUPABASE_URL  = window.SUPABASE_URL || 'https://vcpbxcnweqbmkxhqunxu.supabase.co';
-const SUPABASE_ANON = window.SUPABASE_ANON || 'sb_publishable_m0z1EoUWsULqo05YJnSzyg_VqoyixMS';
+const SUPABASE_URL  = (typeof window !== 'undefined' && window.SUPABASE_URL) ? window.SUPABASE_URL : 'https://vcpbxcnweqbmkxhqunxu.supabase.co';
+const SUPABASE_ANON = (typeof window !== 'undefined' && window.SUPABASE_ANON) ? window.SUPABASE_ANON : 'sb_publishable_m0z1EoUWsULqo05YJnSzyg_VqoyixMS';
 const EVENT_SLUG = new URLSearchParams(window.location.search).get('event') || 'ai-lecture-2026';
 
 let currentLang = 'ar';
@@ -193,8 +193,10 @@ function showForm() {
 async function registerAttendance(formData) {
     const phone_norm = normalizePhone(formData.phone);
 
-    // 1. Local backend / server mode
-    if (!SUPABASE_URL || SUPABASE_URL.includes('YOUR_PROJECT')) {
+    // 1. Local backend / server mode (ONLY on localhost when Supabase is deliberately unconfigured)
+    const isLocalServer = (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) && (!SUPABASE_URL || SUPABASE_URL.includes('YOUR_PROJECT'));
+
+    if (isLocalServer) {
         const res = await fetchWithRetry(`/api/events/${encodeURIComponent(EVENT_SLUG)}/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -206,7 +208,13 @@ async function registerAttendance(formData) {
                 lang: currentLang
             })
         });
-        const result = await res.json();
+        const text = await res.text();
+        let result = {};
+        try {
+            result = JSON.parse(text);
+        } catch (e) {
+            throw new Error(currentLang === 'ar' ? 'تعذر الاتصال بالخادم المحلي.' : 'Local server communication failed.');
+        }
         if (!res.ok && !result.already_registered) {
             throw new Error(result.message || (currentLang === 'ar' ? 'تعذر إتمام التسجيل' : 'Registration failed'));
         }
@@ -242,7 +250,17 @@ async function registerAttendance(formData) {
         body: JSON.stringify(rpcPayload)
     });
 
-    const result = await res.json();
+    const text = await res.text();
+    let result = {};
+    try {
+        result = JSON.parse(text);
+    } catch (parseErr) {
+        console.error('Non-JSON server response:', text);
+        throw new Error(currentLang === 'ar' 
+            ? 'تعذر توثيق الحضور حالياً بسبب ضغط الاتصال. يرجى إعادة المحاولة بعد لحظات.' 
+            : 'Service temporarily busy. Please retry in a few moments.');
+    }
+
     if (!res.ok || !result.success) {
         throw new Error(result?.message || (currentLang === 'ar' ? 'تعذر إتمام التسجيل' : 'Registration failed'));
     }
