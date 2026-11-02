@@ -858,7 +858,7 @@
     <!-- Import Volunteers Modal (Excel / CSV / TXT / Paste) -->
     <div class="modal-wrap" id="importModal">
         <div class="modal-box">
-            <h3>استيراد واعتماد فريق التنظيم والمعتمدين</h3>
+            <h3>استيراد واعتماد الأسماء المهمة وفريق التنظيم</h3>
 
             <div class="import-notice">
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
@@ -869,14 +869,14 @@
             <div class="drop-zone" id="dropZone" onclick="document.getElementById('importFileInput').click()">
                 <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                 <span><strong>انقر لاختيار ملف</strong> أو اسحب ملف Excel (.xlsx, .xls) أو نص (.csv, .txt) هنا</span>
-                <span style="font-size: 11px; color: var(--gold-light);">يتعرف تلقائياً على أعمدة: الاسم، رقم الهاتف، المسمى</span>
+                <span style="font-size: 11px; color: var(--gold-light);">يتعرف تلقائياً على الأسماء (المسمى ورقم الهاتف اختياريان)</span>
                 <input type="file" id="importFileInput" accept=".xlsx,.xls,.csv,.txt" style="display: none;">
             </div>
 
             <div class="import-stats" id="importStats"></div>
 
-            <p style="margin-bottom: 6px; font-size: 12px; color: var(--gold-light);">أو اكتب / الصق الأسماء مباشرة هنا (الاسم، الهاتف، المسمى في كل سطر):</p>
-            <textarea class="modal-txt" id="importText" placeholder="علي حسن, 07701234567, منسق قاعة بابل&#10;مريم أحمد, 07801234567, مسؤولة الاستقبال"></textarea>
+            <p style="margin-bottom: 6px; font-size: 12px; color: var(--gold-light);">أو اكتب / الصق الأسماء مباشرة هنا (يكفي كتابة الاسم فقط في كل سطر، أو الاسم والمسمى):</p>
+            <textarea class="modal-txt" id="importText" placeholder="د. عمار الموسوي, رئيس قسم الذكاء الاصطناعي&#10;حسين علي, فريق التنظيم&#10;فاطمة حسن"></textarea>
 
             <div class="modal-actions">
                 <button type="button" class="btn-adm btn-adm--glass" onclick="closeModal('importModal')">إلغاء</button>
@@ -888,7 +888,7 @@
     <!-- Roster / Team Tracking Modal -->
     <div class="modal-wrap" id="rosterModal">
         <div class="modal-box" style="max-width: 680px;">
-            <h3>سجل متابعة فريق التنظيم المعتمد</h3>
+            <h3>سجل متابعة الأسماء المهمة وفريق التنظيم المعتمد</h3>
             <p>قائمة الأعضاء المعتمدين لمتابعة من حضر وسجل رسمياً ومن لم يسجل بعد.</p>
 
             <div style="display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;">
@@ -937,7 +937,7 @@
             <p>رقم الهاتف هو القيمة المعتمدة لتوثيق الهوية. أدخل رقم هاتف العضو للتحقق الفوري من اعتماده وحالة حضوره.</p>
 
             <div class="form-row">
-                <label for="verifyPhoneInput">أدخل رقم الهاتف (أو آخر 4 أرقام)</label>
+                <label for="verifyPhoneInput">أدخل رقم الهاتف (أو آخر 4 أرقام) أو اكتب اسم العضو</label>
                 <div style="display: flex; gap: 8px;">
                     <input type="tel" class="modal-input" id="verifyPhoneInput" placeholder="07XXXXXXXXX" dir="ltr" autofocus>
                     <button type="button" class="btn-adm btn-adm--gold" id="btnRunVerify">فحص وتوثيق</button>
@@ -963,6 +963,35 @@
         let activeFilter = 'all';
         let deleteTargetId = null;
 
+        
+        // Arabic Name Normalization and Fuzzy Matcher
+        function normalizeArabicName(str) {
+            if (!str) return '';
+            return str
+                .replace(/^(أ.د|ا.د|د|م|أستاذ|دكتور|مهندس|الاستاذ|الدكتور|المهندس)[\.\s\:\/]+/gi, '')
+                .replace(/[أإآٱ]/g, 'ا')
+                .replace(/ة/g, 'ه')
+                .replace(/[ىي]/g, 'ي')
+                .replace(/[\u064B-\u065F\u0670]/g, '')
+                .replace(/\s+/g, ' ')
+                .trim()
+                .toLowerCase();
+        }
+
+        function isNameMatch(nameA, nameB) {
+            const a = normalizeArabicName(nameA);
+            const b = normalizeArabicName(nameB);
+            if (!a || !b) return false;
+            if (a === b) return true;
+            const wordsA = a.split(' ').filter(Boolean);
+            const wordsB = b.split(' ').filter(Boolean);
+            if (wordsA.length >= 2 && wordsB.length >= 2) {
+                if (a.includes(b) || b.includes(a)) return true;
+                if (wordsA[0] === wordsB[0] && wordsA[1] === wordsB[1]) return true;
+            }
+            return false;
+        }
+
         // Check if an attendee is a Professor/Faculty
         function isProfessor(row) {
             const text = ((row.role_title || '') + ' ' + (row.full_name || '')).toLowerCase();
@@ -977,10 +1006,17 @@
 
         // Get computed category object
         function getAttendeeCategory(row) {
-            if (row.kind === 'volunteer') {
+            // Check if matches imported approved roster (by phone or by full name)
+            const memberMatch = approvedVolunteers.find(v => {
+                if (v.phone && row.phone && v.phone === row.phone) return true;
+                return isNameMatch(row.full_name, v.full_name);
+            });
+
+            if (row.kind === 'volunteer' || memberMatch) {
+                const label = (memberMatch && memberMatch.role_title) ? memberMatch.role_title : 'فريق التنظيم';
                 return {
                     key: 'volunteer',
-                    label: 'فريق التنظيم',
+                    label: label,
                     cssClass: 'tag-badge--vol',
                     rowClass: 'row-vol'
                 };
@@ -1446,9 +1482,13 @@
                     const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
                     const formatted = [];
                     lines.forEach(line => {
-                        const parts = line.split(/[,;\t]/).map(p => p.trim());
-                        if (parts.length >= 2) {
-                            formatted.push(`${parts[0]}, ${parts[1]}, ${parts[2] || 'فريق التنظيم'}`);
+                        const parts = line.split(/[,;\t]/).map(p => p.trim()).filter(Boolean);
+                        if (parts.length === 1) {
+                            formatted.push(parts[0]);
+                        } else if (parts.length === 2) {
+                            formatted.push(`${parts[0]}, ${parts[1]}`);
+                        } else if (parts.length >= 3) {
+                            formatted.push(`${parts[0]}, ${parts[1]}, ${parts[2]}`);
                         }
                     });
                     document.getElementById('importText').value = formatted.join('\n');
@@ -1463,16 +1503,26 @@
 
             let startIdx = 0;
             const firstRow = rows[0].map(c => String(c || '').trim().toLowerCase());
-            const hasHeader = firstRow.some(c => c.includes('اسم') || c.includes('name') || c.includes('هاتف') || c.includes('phone'));
+            const hasHeader = firstRow.some(c => c.includes('اسم') || c.includes('name') || c.includes('هاتف') || c.includes('phone') || c.includes('صفة') || c.includes('مسمى') || c.includes('دور') || c.includes('قسم'));
             if (hasHeader) startIdx = 1;
 
-            let nameCol = 0, phoneCol = 1, roleCol = 2;
+            let nameCol = 0, phoneCol = -1, roleCol = -1;
             if (hasHeader) {
                 firstRow.forEach((h, i) => {
                     if (h.includes('اسم') || h.includes('name')) nameCol = i;
                     else if (h.includes('هاتف') || h.includes('phone') || h.includes('موبايل') || h.includes('رقم')) phoneCol = i;
-                    else if (h.includes('صفة') || h.includes('مسمى') || h.includes('دور') || h.includes('role') || h.includes('title')) roleCol = i;
+                    else if (h.includes('صفة') || h.includes('مسمى') || h.includes('دور') || h.includes('role') || h.includes('title') || h.includes('قسم')) roleCol = i;
                 });
+            } else {
+                if (rows[0] && rows[0].length >= 2) {
+                    const val1 = String(rows[0][1] || '').trim();
+                    if (val1.match(/\d{6,}/)) phoneCol = 1;
+                    else roleCol = 1;
+                }
+                if (rows[0] && rows[0].length >= 3) {
+                    if (phoneCol === 1) roleCol = 2;
+                    else phoneCol = 2;
+                }
             }
 
             const lines = [];
@@ -1480,10 +1530,19 @@
                 const row = rows[i];
                 if (!row || row.length === 0) continue;
                 const name = String(row[nameCol] || '').trim();
-                const phone = String(row[phoneCol] || '').trim();
-                const role = String(row[roleCol] || 'فريق التنظيم').trim();
-                if (name && phone) {
+                if (!name) continue;
+
+                const phone = phoneCol >= 0 ? String(row[phoneCol] || '').trim() : '';
+                const role = roleCol >= 0 ? String(row[roleCol] || '').trim() : '';
+
+                if (phone && role) {
                     lines.push(`${name}, ${phone}, ${role}`);
+                } else if (role) {
+                    lines.push(`${name}, ${role}`);
+                } else if (phone) {
+                    lines.push(`${name}, ${phone}`);
+                } else {
+                    lines.push(name);
                 }
             }
 
@@ -1494,14 +1553,14 @@
         function showImportStats(count, source) {
             const stats = document.getElementById('importStats');
             stats.style.display = 'block';
-            stats.innerHTML = `تم استخراج <strong>${count}</strong> اسماً من ملف <em>${escapeHtml(source)}</em> بنجاح. راجع الأسماء أدناه ثم انقر "حفظ واعتماد الفريق".`;
+            stats.innerHTML = `تم استخراج <strong>${count}</strong> اسماً من ملف <em>${escapeHtml(source)}</em> بنجاح. راجع الأسماء أدناه ثم انقر "حفظ واعتماد القائمة".`;
         }
 
-        // Submit Approved Volunteers (Pre-approval only — DOES NOT create fake attendance!)
+        // Submit Approved Names / Volunteers (Phone is completely OPTIONAL!)
         async function submitVolunteers() {
             const raw = document.getElementById('importText').value.trim();
             if (!raw) {
-                alert('يرجى اختيار ملف أو إدخال أسماء وأرقام هواتف فريق التنظيم');
+                alert('يرجى اختيار ملف أو إدخال أسماء الأعضاء والشخصيات المهمة');
                 return;
             }
 
@@ -1509,53 +1568,76 @@
             const volunteers = [];
 
             for (const line of lines) {
-                const parts = line.split(/[,،;\t]/).map(s => s.trim());
-                if (parts.length >= 2) {
-                    const normP = normalizePhone(parts[1]);
-                    if (normP) {
-                        volunteers.push({
-                            full_name: parts[0],
-                            phone: normP,
-                            role_title: parts[2] || 'فريق التنظيم'
-                        });
+                const parts = line.split(/[,،;\t]/).map(s => s.trim()).filter(Boolean);
+                if (parts.length === 0) continue;
+
+                const name = parts[0];
+                let phone = '';
+                let role = 'فريق التنظيم';
+
+                for (let p = 1; p < parts.length; p++) {
+                    const val = parts[p];
+                    const digits = val.replace(/[^\d]/g, '');
+                    if (digits.length >= 7) {
+                        phone = normalizePhone(val);
+                    } else if (val) {
+                        role = val;
                     }
                 }
+
+                volunteers.push({
+                    full_name: name,
+                    phone: phone || '',
+                    role_title: role
+                });
             }
 
             if (volunteers.length === 0) {
-                alert('يرجى التأكد من كتابة الاسم ورقم الهاتف بصيغة صحيحة في كل سطر');
+                alert('يرجى التأكد من كتابة اسم واحد على الأقل في السطور');
                 return;
             }
 
-            // 1. Send to Supabase volunteers table
-            try {
-                await fetch(`${SUPABASE_URL}/rest/v1/rpc/import_volunteers_list`, {
-                    method: 'POST',
-                    headers: {
-                        'apikey': SUPABASE_ANON,
-                        'Authorization': `Bearer ${SUPABASE_ANON}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ p_event_slug: EVENT_SLUG, p_volunteers: volunteers })
-                }).catch(() => {});
-            } catch (e) {}
+            // 1. Send any entries with valid phone numbers to Supabase volunteers table
+            const withPhones = volunteers.filter(v => v.phone);
+            if (withPhones.length > 0) {
+                try {
+                    await fetch(`${SUPABASE_URL}/rest/v1/rpc/import_volunteers_list`, {
+                        method: 'POST',
+                        headers: {
+                            'apikey': SUPABASE_ANON,
+                            'Authorization': `Bearer ${SUPABASE_ANON}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ p_event_slug: EVENT_SLUG, p_volunteers: withPhones })
+                    }).catch(() => {});
+                } catch (e) {}
+            }
 
-            // 2. Merge into approvedVolunteers roster
+            // 2. Merge into approvedVolunteers roster (deduplicate by phone OR by normalized name)
             volunteers.forEach(v => {
-                const existing = approvedVolunteers.find(av => av.phone === v.phone);
+                const existing = approvedVolunteers.find(av => {
+                    if (v.phone && av.phone && av.phone === v.phone) return true;
+                    return isNameMatch(av.full_name, v.full_name);
+                });
+
                 if (existing) {
                     existing.full_name = v.full_name;
-                    existing.role_title = v.role_title;
+                    if (v.phone) existing.phone = v.phone;
+                    if (v.role_title) existing.role_title = v.role_title;
                 } else {
                     approvedVolunteers.push(v);
                 }
             });
             saveApprovedVolunteers();
 
-            // 3. Highlight any matching attendees WHO ALREADY REGISTERED (does not add new rows!)
+            // 3. Highlight any matching attendees WHO ALREADY REGISTERED (by phone or by name)
             let highlightedCount = 0;
             dataRows.forEach(row => {
-                const match = volunteers.find(v => v.phone === row.phone || (v.full_name && row.full_name && row.full_name.includes(v.full_name)));
+                const match = volunteers.find(v => {
+                    if (v.phone && row.phone && v.phone === row.phone) return true;
+                    return isNameMatch(row.full_name, v.full_name);
+                });
+
                 if (match) {
                     row.kind = 'volunteer';
                     if (match.role_title) row.role_title = match.role_title;
@@ -1570,12 +1652,12 @@
             render();
 
             alert(
-                `تم اعتماد ${volunteers.length} عضواً في فريق التنظيم بنجاح.\n\n` +
-                `تنويه: تم تمييز ${highlightedCount} عضواً مسجلاً بالفعل، أما البقية فسيتم تمييزهم تلقائياً فور تسجيل حضورهم بأنفسهم.`
+                `تم اعتماد ${volunteers.length} اسماً في قائمة الأسماء المهمة وفريق التنظيم بنجاح.\n\n` +
+                `تنويه: تم تمييز ${highlightedCount} عضواً مسجلاً بالفعل، أما البقية فسيتم تمييزهم تلقائياً كأعضاء معتمدين فور تسجيل حضورهم عبر الرابط.`
             );
         }
 
-        // Open Managing Team Roster Modal
+        // Open Managing Team & Important Names Roster Modal
         function openRosterModal() {
             loadApprovedVolunteers();
             const modal = document.getElementById('rosterModal');
@@ -1587,7 +1669,7 @@
             let pendingCount = 0;
 
             if (approvedVolunteers.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 24px; color: var(--ivory-dim);">لم يتم استيراد أي عضو في فريق التنظيم بعد. انقر على "استيراد فريق التنظيم" للبدء.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 24px; color: var(--ivory-dim);">لم يتم استيراد أي أسماء حتى الآن. انقر على "استيراد فريق التنظيم" لإضافة الأسماء.</td></tr>`;
                 document.getElementById('rosterAttendedCount').textContent = 0;
                 document.getElementById('rosterPendingCount').textContent = 0;
                 modal.classList.add('open');
@@ -1595,17 +1677,20 @@
             }
 
             tbody.innerHTML = approvedVolunteers.map((vol, idx) => {
-                const match = dataRows.find(r => r.phone === vol.phone);
+                const match = dataRows.find(r => {
+                    if (vol.phone && r.phone && vol.phone === r.phone) return true;
+                    return isNameMatch(r.full_name, vol.full_name);
+                });
                 const hasAttended = !!match;
                 if (hasAttended) attendedCount++;
                 else pendingCount++;
 
                 return `
                     <tr>
-                        <td style="color: rgba(245, 240, 232, 0.4);">${idx + 1}</td>
+                        <td style="color: rgba(245, 240, 232, 0.4); font-size: 12px;">${idx + 1}</td>
                         <td><strong>${escapeHtml(vol.full_name)}</strong></td>
-                        <td>${escapeHtml(vol.role_title || 'فريق التنظيم')}</td>
-                        <td dir="ltr" style="text-align: right;">${escapeHtml(vol.phone || '—')}</td>
+                        <td><span style="color: var(--gold-light);">${escapeHtml(vol.role_title || 'فريق التنظيم')}</span></td>
+                        <td dir="ltr" style="text-align: right; color: var(--ivory-dim); font-size: 12px;">${vol.phone ? escapeHtml(vol.phone) : '— (غير محدد)'}</td>
                         <td style="text-align: center;">
                             ${hasAttended
                                 ? `<span class="status-pill status-pill--attended">حضر وسجل (${match.serial || 'مسجل'})</span>`
@@ -1720,13 +1805,23 @@
             const norm = normalizePhone(input);
             const cleanDigits = input.replace(/[^\d]/g, '');
 
-            const volMatch = approvedVolunteers.find(v => v.phone === norm || (v.phone && cleanDigits.length >= 4 && v.phone.endsWith(cleanDigits)));
-            const regMatch = dataRows.find(r => r.phone === norm || (r.phone && cleanDigits.length >= 4 && r.phone.endsWith(cleanDigits)));
+            const volMatch = approvedVolunteers.find(v => {
+                if (v.phone && (v.phone === norm || (cleanDigits.length >= 4 && v.phone.endsWith(cleanDigits)))) return true;
+                return isNameMatch(input, v.full_name);
+            });
+            const regMatch = dataRows.find(r => {
+                if (r.phone && (r.phone === norm || (cleanDigits.length >= 4 && r.phone.endsWith(cleanDigits)))) return true;
+                return isNameMatch(input, r.full_name);
+            });
 
             resultBox.style.display = 'block';
 
             if (volMatch) {
                 const isRegistered = !!regMatch;
+                const memberPhone = volMatch.phone || '+9647000000000';
+                const memberNameEsc = escapeHtml(volMatch.full_name).replace(/'/g, "\\'");
+                const memberRoleEsc = escapeHtml(volMatch.role_title || 'فريق التنظيم').replace(/'/g, "\\'");
+
                 resultBox.innerHTML = `
                     <div style="background: rgba(201, 168, 76, 0.12); border: 1.5px solid var(--gold); border-radius: var(--radius-sm); padding: 18px; text-align: right;">
                         <div style="display: flex; align-items: center; gap: 8px; color: var(--gold-light); font-weight: 700; margin-bottom: 10px;">
@@ -1735,15 +1830,15 @@
                         </div>
                         <div style="font-size: 15px; font-weight: 700; color: var(--ivory); margin-bottom: 4px;">${escapeHtml(volMatch.full_name)}</div>
                         <div style="font-size: 13px; color: var(--gold-light); margin-bottom: 6px;">المسمى الرسمي: ${escapeHtml(volMatch.role_title || 'فريق التنظيم')}</div>
-                        <div style="font-size: 12px; color: var(--ivory-dim); direction: ltr; text-align: right; margin-bottom: 12px;">${escapeHtml(volMatch.phone)}</div>
+                        <div style="font-size: 12px; color: var(--ivory-dim); direction: ltr; text-align: right; margin-bottom: 12px;">${volMatch.phone ? escapeHtml(volMatch.phone) : 'رقم الهاتف: غير محدد'}</div>
                         ${isRegistered ? `
                             <div style="background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; border-radius: 6px; padding: 10px 12px; font-size: 13px; color: #e0f2fe;">
                                 تم تأكيد الحضور رسمياً • الرقم المرجعي: <strong style="font-family: var(--font-heading); color: var(--gold-light);">${regMatch.serial || 'ALF-2026-CONFIRMED'}</strong>
                             </div>
                         ` : `
                             <div style="background: rgba(245, 240, 232, 0.08); border: 1px solid rgba(245, 240, 232, 0.2); border-radius: 6px; padding: 12px; font-size: 13px;">
-                                <span style="color: var(--ivory-dim); display: block; margin-bottom: 10px;">العضو معتمد بالهاتف، لكنه لم يسجل عبر الرابط بعد:</span>
-                                <button type="button" class="btn-adm btn-adm--gold" onclick="quickCheckin('${escapeHtml(volMatch.full_name).replace(/'/g, "\\'")}', '${volMatch.phone}', '${escapeHtml(volMatch.role_title || 'فريق التنظيم').replace(/'/g, "\\\'")}');" style="width: 100%; justify-content: center;">
+                                <span style="color: var(--ivory-dim); display: block; margin-bottom: 10px;">العضو معتمد في القائمة، لكنه لم يسجل عبر الرابط بعد:</span>
+                                <button type="button" class="btn-adm btn-adm--gold" onclick="quickCheckin('${memberNameEsc}', '${memberPhone}', '${memberRoleEsc}');" style="width: 100%; justify-content: center;">
                                     تأكيد وتوثيق حضور العضو فورياً الآن
                                 </button>
                             </div>
