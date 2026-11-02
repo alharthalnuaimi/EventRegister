@@ -656,6 +656,10 @@
             </div>
 
             <div class="admin-actions">
+                <button class="btn-adm btn-adm--gold" id="btnVerifyModal">
+                    <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><polyline points="9 12 11 14 15 10"></polyline></svg>
+                    فحص وتوثيق بالهاتف
+                </button>
                 <button class="btn-adm btn-adm--gold" id="btnAddModal">
                     <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                     إضافة قيد جديد
@@ -922,6 +926,32 @@
         </div>
     </div>
 
+    
+    <!-- Fast Phone Identity Verification Modal -->
+    <div class="modal-wrap" id="verifyModal">
+        <div class="modal-box" style="max-width: 520px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                <svg style="width: 24px; height: 24px; stroke: var(--gold); fill: none; stroke-width: 2;" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><polyline points="9 12 11 14 15 10"></polyline></svg>
+                <h3 style="margin: 0;">فحص وتوثيق هوية الأعضاء بالهاتف</h3>
+            </div>
+            <p>رقم الهاتف هو القيمة المعتمدة لتوثيق الهوية. أدخل رقم هاتف العضو للتحقق الفوري من اعتماده وحالة حضوره.</p>
+
+            <div class="form-row">
+                <label for="verifyPhoneInput">أدخل رقم الهاتف (أو آخر 4 أرقام)</label>
+                <div style="display: flex; gap: 8px;">
+                    <input type="tel" class="modal-input" id="verifyPhoneInput" placeholder="07XXXXXXXXX" dir="ltr" autofocus>
+                    <button type="button" class="btn-adm btn-adm--gold" id="btnRunVerify">فحص وتوثيق</button>
+                </div>
+            </div>
+
+            <div id="verifyResult" style="margin-top: 16px; display: none;"></div>
+
+            <div class="modal-actions" style="margin-top: 20px;">
+                <button type="button" class="btn-adm btn-adm--glass" onclick="closeModal('verifyModal')">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
     <script src="/config.js"></script>
     <script>
         const SUPABASE_URL  = window.SUPABASE_URL || 'https://vcpbxcnweqbmkxhqunxu.supabase.co';
@@ -1095,12 +1125,18 @@
                         <td>
                             <span class="tag-badge ${cat.cssClass}">
                                 ${cat.key === 'professor' ? '<svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>' : ''}
-                                ${cat.label}
+                                ${cat.key === 'volunteer' ? '<svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>' : ''}
+                                ${cat.label} ${cat.key === 'volunteer' ? '(موثق بالهاتف)' : ''}
                             </span>
                         </td>
                         <td>${escapeHtml(row.role_title || '—')}</td>
                         <td>${escapeHtml(row.workplace || '—')}</td>
-                        <td dir="ltr" style="text-align: right;">${escapeHtml(row.phone || '—')}</td>
+                        <td dir="ltr" style="text-align: right;">
+                            ${cat.key === 'volunteer' 
+                                ? `<span style="color: var(--gold-light); font-weight: 600; display: inline-flex; align-items: center; gap: 5px;" title="تم توثيق الهوية عبر رقم الهاتف المعتمد">${escapeHtml(row.phone || '—')} <svg style="width: 13px; height: 13px; stroke: #38bdf8; fill: none; stroke-width: 2.5;" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span>`
+                                : escapeHtml(row.phone || '—')
+                            }
+                        </td>
                         <td>${timeText}</td>
                         <td>
                             <div class="actions-cell">
@@ -1587,6 +1623,137 @@
                 activeFilter = btn.dataset.filter;
                 render();
             });
+        });
+
+        
+        // Phone Verification Lookup
+        function runPhoneVerification() {
+            const input = document.getElementById('verifyPhoneInput').value.trim();
+            const resultBox = document.getElementById('verifyResult');
+            if (!input) {
+                resultBox.style.display = 'none';
+                return;
+            }
+
+            const norm = normalizePhone(input);
+            const cleanDigits = input.replace(/[^\d]/g, '');
+
+            const volMatch = approvedVolunteers.find(v => v.phone === norm || (v.phone && cleanDigits.length >= 4 && v.phone.endsWith(cleanDigits)));
+            const regMatch = dataRows.find(r => r.phone === norm || (r.phone && cleanDigits.length >= 4 && r.phone.endsWith(cleanDigits)));
+
+            resultBox.style.display = 'block';
+
+            if (volMatch) {
+                const isRegistered = !!regMatch;
+                resultBox.innerHTML = `
+                    <div style="background: rgba(201, 168, 76, 0.12); border: 1.5px solid var(--gold); border-radius: var(--radius-sm); padding: 18px; text-align: right;">
+                        <div style="display: flex; align-items: center; gap: 8px; color: var(--gold-light); font-weight: 700; margin-bottom: 10px;">
+                            <svg style="width: 20px; height: 20px; stroke: var(--gold); fill: none; stroke-width: 2;" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><polyline points="9 12 11 14 15 10"></polyline></svg>
+                            <span>الهوية موثقة: عضو معتمد في فريق التنظيم</span>
+                        </div>
+                        <div style="font-size: 15px; font-weight: 700; color: var(--ivory); margin-bottom: 4px;">${escapeHtml(volMatch.full_name)}</div>
+                        <div style="font-size: 13px; color: var(--gold-light); margin-bottom: 6px;">المسمى الرسمي: ${escapeHtml(volMatch.role_title || 'فريق التنظيم')}</div>
+                        <div style="font-size: 12px; color: var(--ivory-dim); direction: ltr; text-align: right; margin-bottom: 12px;">${escapeHtml(volMatch.phone)}</div>
+                        ${isRegistered ? `
+                            <div style="background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; border-radius: 6px; padding: 10px 12px; font-size: 13px; color: #e0f2fe;">
+                                تم تأكيد الحضور رسمياً • الرقم المرجعي: <strong style="font-family: var(--font-heading); color: var(--gold-light);">${regMatch.serial || 'ALF-2026-CONFIRMED'}</strong>
+                            </div>
+                        ` : `
+                            <div style="background: rgba(245, 240, 232, 0.08); border: 1px solid rgba(245, 240, 232, 0.2); border-radius: 6px; padding: 12px; font-size: 13px;">
+                                <span style="color: var(--ivory-dim); display: block; margin-bottom: 10px;">العضو معتمد بالهاتف، لكنه لم يسجل عبر الرابط بعد:</span>
+                                <button type="button" class="btn-adm btn-adm--gold" onclick="quickCheckin('${escapeHtml(volMatch.full_name).replace(/'/g, "\\'")}', '${volMatch.phone}', '${escapeHtml(volMatch.role_title || 'فريق التنظيم').replace(/'/g, "\\\'")}');" style="width: 100%; justify-content: center;">
+                                    تأكيد وتوثيق حضور العضو فورياً الآن
+                                </button>
+                            </div>
+                        `}
+                    </div>
+                `;
+                return;
+            }
+
+            if (regMatch) {
+                const cat = getAttendeeCategory(regMatch);
+                resultBox.innerHTML = `
+                    <div style="background: rgba(5, 8, 43, 0.7); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); padding: 16px; text-align: right;">
+                        <div style="font-size: 14px; font-weight: 700; color: var(--ivory); margin-bottom: 4px;">${escapeHtml(regMatch.full_name)}</div>
+                        <div style="font-size: 12px; color: var(--gold-light); margin-bottom: 6px;">${cat.label} • ${escapeHtml(regMatch.role_title || 'حاضر')}</div>
+                        <div style="font-size: 12px; color: var(--ivory-dim); direction: ltr; text-align: right; margin-bottom: 8px;">${escapeHtml(regMatch.phone)}</div>
+                        <div style="background: rgba(56, 189, 248, 0.12); border: 1px solid #38bdf8; border-radius: 6px; padding: 8px 12px; font-size: 12px; color: #e0f2fe;">
+                            حاضر مسجل في الفعالية • كود: <strong style="font-family: var(--font-heading); color: var(--gold-light);">${regMatch.serial || '—'}</strong>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            resultBox.innerHTML = `
+                <div style="background: rgba(139, 0, 0, 0.2); border: 1px solid var(--crimson); border-radius: var(--radius-sm); padding: 14px; text-align: center; color: #ffb4b4; font-size: 13px;">
+                    رقم الهاتف غير مدرج في سجل الأعضاء المعتمدين أو الحضور المسجل.
+                </div>
+            `;
+        }
+
+        async function quickCheckin(fullName, phoneNorm, roleTitle) {
+            try {
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/register_attendee`, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SUPABASE_ANON,
+                        'Authorization': `Bearer ${SUPABASE_ANON}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        p_event_slug: EVENT_SLUG,
+                        p_full_name: fullName,
+                        p_phone_norm: phoneNorm,
+                        p_email_norm: '',
+                        p_role_title: roleTitle,
+                        p_workplace: 'جامعة الفارابي',
+                        p_lang: 'ar'
+                    })
+                });
+
+                const result = await res.json();
+                if (res.ok && result.success) {
+                    const newRow = {
+                        id: result.registration_id,
+                        full_name: fullName,
+                        phone: phoneNorm,
+                        role_title: roleTitle,
+                        workplace: 'جامعة الفارابي',
+                        kind: 'volunteer',
+                        serial: result.serial,
+                        created_at: new Date().toISOString()
+                    };
+                    dataRows.unshift(newRow);
+                    saveLocal();
+                    render();
+                    runPhoneVerification();
+                    alert('تم توثيق وتأكيد حضور العضو بنجاح.');
+                } else {
+                    alert(result.message || 'تعذر تأكيد الحضور');
+                }
+            } catch (e) {
+                alert('حدث خطأ أثناء الاتصال');
+            }
+        }
+
+        // Listener for Verify Modal
+        document.getElementById('btnVerifyModal')?.addEventListener('click', () => {
+            document.getElementById('verifyPhoneInput').value = '';
+            document.getElementById('verifyResult').style.display = 'none';
+            document.getElementById('verifyModal').classList.add('open');
+            setTimeout(() => document.getElementById('verifyPhoneInput').focus(), 150);
+        });
+
+        document.getElementById('btnRunVerify')?.addEventListener('click', runPhoneVerification);
+        document.getElementById('verifyPhoneInput')?.addEventListener('input', () => {
+            const val = document.getElementById('verifyPhoneInput').value.trim();
+            if (val.length >= 4) runPhoneVerification();
+            else document.getElementById('verifyResult').style.display = 'none';
+        });
+        document.getElementById('verifyPhoneInput')?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') runPhoneVerification();
         });
 
         // Initialize on page load

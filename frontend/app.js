@@ -167,7 +167,7 @@ function showConfirmation(record) {
 
     if (record.kind === 'volunteer') {
         pill.className = 'confirm-pill confirm-pill--volunteer';
-        pillTxt.textContent = currentLang === 'ar' ? 'فريق التنظيم المعين' : 'Official Organizing Team';
+        pillTxt.textContent = currentLang === 'ar' ? 'عضو معتمد — تم توثيق الهوية برقم الهاتف' : 'Official Organizing Team';
     } else if (record.already_registered) {
         pill.className = 'confirm-pill confirm-pill--already';
         pillTxt.textContent = currentLang === 'ar' ? 'تم تسجيل حضورك مسبقاً' : 'Already Recorded';
