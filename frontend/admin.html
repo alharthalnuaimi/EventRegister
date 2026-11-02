@@ -1331,18 +1331,7 @@
 
                 if (res.ok) {
                     const result = await res.json();
-                    const deletedIds = getDeletedIds();
-                    const edited = getEditedRecords();
-
-                    let rows = (result.attendees || []).filter(r => !deletedIds.includes(String(r.id)));
-                    rows = rows.map(r => {
-                        if (edited[r.id]) {
-                            return { ...r, ...edited[r.id] };
-                        }
-                        return r;
-                    });
-
-                    dataRows = rows;
+                    dataRows = buildFullAttendeeList(result.attendees || []);
                     saveLocal();
                     render();
                 } else {
@@ -1361,6 +1350,66 @@
         }
 
         
+        
+        function buildFullAttendeeList(backendAttendees) {
+            const deletedIds = getDeletedIds();
+            const edited = getEditedRecords();
+
+            // 1. Process backend attendees from Supabase
+            const list = [];
+            const matchedVolNames = new Set();
+
+            (backendAttendees || []).forEach(row => {
+                if (deletedIds.includes(String(row.id))) return;
+
+                let r = { ...row };
+                if (edited[r.id]) {
+                    r = { ...r, ...edited[r.id] };
+                }
+
+                // Check if matches an official volunteer
+                const volMatch = DEFAULT_APPROVED_VOLUNTEERS.find(v => isNameMatch(r.full_name, v.full_name));
+                if (volMatch) {
+                    r.kind = 'volunteer';
+                    if (!r.role_title || r.role_title === 'طالب' || r.role_title === 'حاضر') {
+                        r.role_title = volMatch.role_title;
+                    }
+                    matchedVolNames.add(normalizeArabicName(volMatch.full_name));
+                }
+
+                list.push(r);
+            });
+
+            // 2. Add remaining official volunteers as confirmed attendees
+            DEFAULT_APPROVED_VOLUNTEERS.forEach((v, idx) => {
+                const volKey = normalizeArabicName(v.full_name);
+                if (matchedVolNames.has(volKey)) return;
+
+                const volId = 'vol-' + (idx + 1);
+                if (deletedIds.includes(volId)) return;
+
+                const serial = 'ALF-VOL-' + String(idx + 1).padStart(2, '0');
+                let volRow = {
+                    id: volId,
+                    serial: serial,
+                    full_name: v.full_name,
+                    kind: 'volunteer',
+                    role_title: v.role_title,
+                    workplace: 'جامعة الفارابي',
+                    phone: v.phone || '',
+                    created_at: new Date('2026-11-02T10:00:00Z').toISOString()
+                };
+
+                if (edited[volId]) {
+                    volRow = { ...volRow, ...edited[volId] };
+                }
+
+                list.push(volRow);
+            });
+
+            return list;
+        }
+
         function getDeletedIds() {
             try {
                 return JSON.parse(localStorage.getItem('alfarabi_deleted_ids_' + EVENT_SLUG) || '[]');
@@ -1394,7 +1443,8 @@
         }
 
         function loadLocal() {
-            dataRows = JSON.parse(localStorage.getItem('alfarabi_admin_attendees_' + EVENT_SLUG) || '[]');
+            const rawStored = JSON.parse(localStorage.getItem('alfarabi_admin_attendees_' + EVENT_SLUG) || '[]');
+            dataRows = buildFullAttendeeList(rawStored);
         }
 
         function saveApprovedVolunteers() {
@@ -1403,7 +1453,24 @@
         }
 
         function loadApprovedVolunteers() {
-            approvedVolunteers = JSON.parse(localStorage.getItem('alfarabi_approved_volunteers_' + EVENT_SLUG) || '[]');
+            const stored = JSON.parse(localStorage.getItem('alfarabi_approved_volunteers_' + EVENT_SLUG) || 'null');
+            if (stored && Array.isArray(stored) && stored.length > 0) {
+                // Ensure all default 53 volunteers are present
+                const map = new Map();
+                DEFAULT_APPROVED_VOLUNTEERS.forEach(v => map.set(normalizeArabicName(v.full_name), { ...v }));
+                stored.forEach(v => {
+                    const key = normalizeArabicName(v.full_name);
+                    if (map.has(key)) {
+                        map.set(key, { ...map.get(key), ...v });
+                    } else {
+                        map.set(key || v.phone || Math.random().toString(), v);
+                    }
+                });
+                approvedVolunteers = Array.from(map.values());
+            } else {
+                approvedVolunteers = DEFAULT_APPROVED_VOLUNTEERS.map(v => ({ ...v }));
+                saveApprovedVolunteers();
+            }
             updateRosterBadgeCount();
         }
 
